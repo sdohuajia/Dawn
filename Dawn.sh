@@ -17,7 +17,7 @@ function main_menu() {
         echo "1) 安装并启动 Dawn"
         echo "2) 退出"
 
-        read -p "请输入选项 [1-3]: " choice
+        read -p "请输入选项 [1-2]: " choice
 
         case $choice in
             1)
