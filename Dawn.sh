@@ -37,16 +37,16 @@ function main_menu() {
 # 安装特定版本 Go 的函数
 function install_go() {
     REQUIRED_GO_VERSION="1.22.3"
-    CURRENT_GO_VERSION=$(go version 2>/dev/null | awk -F ' ' '{print $3}' | sed 's/go//')
+    CURRENT_GO_VERSION=$(go version 2>/dev/null | awk '{print $3}' | cut -d. -f1,2)
 
     if [ "$CURRENT_GO_VERSION" != "$REQUIRED_GO_VERSION" ]; then
         echo "当前 Go 版本 ($CURRENT_GO_VERSION) 不符合要求 ($REQUIRED_GO_VERSION)。正在安装正确版本..."
-        wget -q https://golang.org/dl/go$REQUIRED_GO_VERSION.linux-amd64.tar.gz
+        wget -q https://golang.org/dl/go$REQUIRED_GO_VERSION.linux-amd64.tar.gz || { echo "下载 Go 失败"; exit 1; }
         sudo rm -rf /usr/local/go
         sudo tar -C /usr/local -xzf go$REQUIRED_GO_VERSION.linux-amd64.tar.gz
-        export PATH=$PATH:/usr/local/go/bin
-        echo "Go $REQUIRED_GO_VERSION 安装完成。"
+        echo "export PATH=\$PATH:/usr/local/go/bin" >> ~/.bashrc
         source ~/.bashrc
+        echo "Go $REQUIRED_GO_VERSION 安装完成。"
     else
         echo "Go 已经是正确版本 ($REQUIRED_GO_VERSION)。"
     fi
@@ -76,7 +76,7 @@ function install_and_start_dawn() {
     if [ -d "Dawn-main" ]; then
         echo "Dawn-main 目录已存在，跳过克隆。"
     else
-        git clone https://github.com/sdohuajia/Dawn-main.git
+        git clone https://github.com/sdohuajia/Dawn-main.git || { echo "克隆失败"; exit 1; }
     fi
     cd Dawn-main || { echo "无法进入 Dawn-main 目录"; exit 1; }
 
