@@ -16,7 +16,6 @@ function main_menu() {
         echo "请选择要执行的操作:"
         echo "1) 安装并启动 Dawn"
         echo "2) 退出"
-        echo "3) 国外服务器运行节点（无需代理）"
 
         read -p "请输入选项 [1-3]: " choice
 
@@ -27,9 +26,6 @@ function main_menu() {
             2)
                 echo "退出脚本..."
                 exit 0
-                ;;
-            3)
-                run_foreign_server_node
                 ;;
             *)
                 echo "无效选项，请重新选择。"
