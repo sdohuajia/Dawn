@@ -29,6 +29,7 @@ function main_menu() {
                 ;;
             *)
                 echo "无效选项，请重新选择。"
+                read -n 1 -s -r -p "按任意键继续..."
                 ;;
         esac
     done
