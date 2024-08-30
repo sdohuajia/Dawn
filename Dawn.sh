@@ -75,6 +75,9 @@ function install_node() {
     sudo apt install -y curl iptables build-essential git wget jq make gcc nano tmux htop nvme-cli pkg-config libssl-dev libleveldb-dev tar clang bsdmainutils ncdu unzip libleveldb-dev lz4 snapd
 
     pm2 start dawn.py
+
+# 等待用户按任意键以返回主菜单
+    read -p "按任意键返回主菜单..."
 }
 
 # 主菜单函数
