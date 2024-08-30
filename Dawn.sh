@@ -31,7 +31,7 @@ function install_pm2() {
     fi
 }
 
-# 安装 Go 环境并启动 Dawn 的函数
+# 启动 Dawn 的函数
 function install_and_start_dawn() {
     echo "更新包列表..."
     sudo apt update
