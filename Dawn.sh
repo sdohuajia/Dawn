@@ -76,7 +76,14 @@ function install_node() {
 
     pm2 start dawn.py
 
-# 等待用户按任意键以返回主菜单
+    # 等待用户按任意键以返回主菜单
+    read -p "按任意键返回主菜单..."
+}
+
+# 查看日志的函数
+function view_logs() {
+    pm2 log dawn
+    # 等待用户按任意键以返回主菜单
     read -p "按任意键返回主菜单..."
 }
 
@@ -92,15 +99,19 @@ function main_menu() {
         echo "退出脚本，请按键盘 ctrl + C 退出即可"
         echo "请选择要执行的操作:"
         echo "1) 安装并启动 Dawn"
-        echo "2) 退出"
+        echo "2) 查看日志"
+        echo "3) 退出"
 
-        read -p "请输入选项 [1-2]: " choice
+        read -p "请输入选项 [1-3]: " choice
 
         case $choice in
             1)
                 install_and_start_dawn
                 ;;
             2)
+                view_logs
+                ;;
+            3)
                 echo "退出脚本..."
                 exit 0
                 ;;
