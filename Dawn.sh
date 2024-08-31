@@ -8,7 +8,11 @@ function check_and_install() {
     for cmd in "$@"; do
         if ! command -v "$cmd" &> /dev/null; then
             echo "$cmd 未安装，正在安装..."
-            sudo apt install -y "$cmd"
+            if [ "$cmd" == "python3-pip" ]; then
+                sudo apt install -y python3-pip
+            else
+                sudo apt install -y "$cmd"
+            fi
         else
             echo "$cmd 已安装"
         fi
@@ -50,10 +54,11 @@ function install_and_start_dawn() {
 
     check_and_install go git curl python3-pip
 
+    # 安装 Go 和 PM2
     install_go
-
     install_pm2
 
+    # 安装 Python 包
     pip3 install pillow ddddocr requests loguru
 
     # 获取用户名和密码
@@ -66,10 +71,11 @@ function install_and_start_dawn() {
 
     wget -O dawn.py https://raw.githubusercontent.com/b1n4he/DawnAuto/main/dawn.py || { echo "下载 dawn.py 失败"; exit 1; }
 
-    # 更新和安装必要的软件
+    # 更新和安装其他必要的软件
     sudo apt update && sudo apt upgrade -y
     check_and_install curl iptables build-essential git wget jq make gcc nano tmux htop nvme-cli pkg-config libssl-dev libleveldb-dev tar clang bsdmainutils ncdu unzip lz4 snapd
 
+    # 启动 Dawn
     pm2 start dawn.py
 
     # 等待用户按任意键以返回主菜单
