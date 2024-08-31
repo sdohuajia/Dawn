@@ -52,12 +52,6 @@ function install_and_start_dawn() {
     echo "更新包列表..."
     sudo apt update
 
-    check_and_install go git curl python3-pip
-
-    # 安装 Go 和 PM2
-    install_go
-    install_pm2
-
     # 安装 Python 包
     pip3 install pillow ddddocr requests loguru
 
