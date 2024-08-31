@@ -51,7 +51,8 @@ function install_pm2() {
 function install_and_start_dawn() {
     echo "更新包列表..."
     sudo apt update
-
+    sudo apt install python3-pillow
+    
     # 安装 Python 包
     pip3 install pillow ddddocr requests loguru
 
