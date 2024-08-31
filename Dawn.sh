@@ -3,37 +3,28 @@
 # 脚本保存路径
 SCRIPT_PATH="$HOME/Dawn.sh"
 
-# 检查并安装必备工具的函数
-function check_and_install() {
-    for cmd in "$@"; do
-        if ! command -v "$cmd" &> /dev/null; then
-            echo "$cmd 未安装，正在安装..."
-            if [ "$cmd" == "python3-pip" ]; then
-                sudo apt install -y python3-pip
-            else
-                sudo apt install -y "$cmd"
-            fi
-        else
-            echo "$cmd 已安装"
-        fi
-    done
-}
+# 检查是否以root用户运行脚本
+if [ "$(id -u)" != "0" ]; then
+    echo "此脚本需要以root用户权限运行。"
+    echo "请尝试使用 'sudo -i' 命令切换到root用户，然后再次运行此脚本。"
+    exit 1
+fi
 
-# 安装特定版本 Go 的函数
-function install_go() {
-    REQUIRED_GO_VERSION="1.22.3"
-    CURRENT_GO_VERSION=$(go version 2>/dev/null | awk '{print $3}' | cut -d. -f1,2)
-
-    if [ "$CURRENT_GO_VERSION" != "$REQUIRED_GO_VERSION" ]; then
-        echo "当前 Go 版本 ($CURRENT_GO_VERSION) 不符合要求 ($REQUIRED_GO_VERSION)。正在安装正确版本..."
-        wget -q https://golang.org/dl/go$REQUIRED_GO_VERSION.linux-amd64.tar.gz || { echo "下载 Go 失败"; exit 1; }
-        sudo rm -rf /usr/local/go
-        sudo tar -C /usr/local -xzf go$REQUIRED_GO_VERSION.linux-amd64.tar.gz
-        echo "export PATH=\$PATH:/usr/local/go/bin" >> ~/.bashrc
-        source ~/.bashrc
-        echo "Go $REQUIRED_GO_VERSION 安装完成。"
+# 检查并安装 Node.js 和 npm
+function install_nodejs_and_npm() {
+    if command -v node > /dev/null 2>&1; then
+        echo "Node.js 已安装"
     else
-        echo "Go 已经是正确版本 ($REQUIRED_GO_VERSION)。"
+        echo "Node.js 未安装，正在安装..."
+        curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+        sudo apt-get install -y nodejs
+    fi
+
+    if command -v npm > /dev/null 2>&1; then
+        echo "npm 已安装"
+    else
+        echo "npm 未安装，正在安装..."
+        sudo apt-get install -y npm
     fi
 }
 
@@ -54,17 +45,14 @@ function install_and_start_dawn() {
     sudo apt install python3-pillow
     
     # 安装 Python 包
-    pip3 install pillow ddddocr requests loguru
+    install_nodejs_and_npm
+    install_pm2
 
-    # 检查 Pillow 是否成功安装
-    python3 -c "from PIL import Image" 2>/dev/null
-    if [ $? -ne 0 ]; then
-        echo "Pillow 未安装，正在安装..."
-        pip3 install pillow
-    else
-        echo "Pillow 已安装"
-    fi
-    
+    pip3 install pillow
+    pip3 install ddddocr
+    pip3 install requests
+    pip3 install loguru
+
     # 获取用户名和密码
     read -r -p "请输入邮箱: " DAWNUSERNAME
     export DAWNUSERNAME=$DAWNUSERNAME
