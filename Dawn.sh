@@ -3,6 +3,18 @@
 # 脚本保存路径
 SCRIPT_PATH="$HOME/Dawn.sh"
 
+# 检查并安装必备工具的函数
+function check_and_install() {
+    for cmd in "$@"; do
+        if ! command -v "$cmd" &> /dev/null; then
+            echo "$cmd 未安装，正在安装..."
+            sudo apt install -y "$cmd"
+        else
+            echo "$cmd 已安装"
+        fi
+    done
+}
+
 # 安装特定版本 Go 的函数
 function install_go() {
     REQUIRED_GO_VERSION="1.22.3"
@@ -36,26 +48,10 @@ function install_and_start_dawn() {
     echo "更新包列表..."
     sudo apt update
 
-    if ! command -v go &> /dev/null; then
-        echo "Go 未安装，开始安装..."
-        install_go
-    else
-        echo "Go 已经安装，检查版本..."
-        install_go
-    fi
+    check_and_install go git curl python3-pip
 
-    if ! command -v git &> /dev/null; then
-        echo "Git 未安装，开始安装..."
-        sudo apt install -y git
-    else
-        echo "Git 已经安装，跳过安装。"
-    fi
+    install_go
 
-    install_node
-}
-
-# 节点安装功能
-function install_node() {
     install_pm2
 
     pip3 install pillow ddddocr requests loguru
@@ -72,7 +68,7 @@ function install_node() {
 
     # 更新和安装必要的软件
     sudo apt update && sudo apt upgrade -y
-    sudo apt install -y curl iptables build-essential git wget jq make gcc nano tmux htop nvme-cli pkg-config libssl-dev libleveldb-dev tar clang bsdmainutils ncdu unzip libleveldb-dev lz4 snapd
+    check_and_install curl iptables build-essential git wget jq make gcc nano tmux htop nvme-cli pkg-config libssl-dev libleveldb-dev tar clang bsdmainutils ncdu unzip lz4 snapd
 
     pm2 start dawn.py
 
