@@ -61,6 +61,15 @@ function install_and_start_dawn() {
     # 安装 Python 包
     pip3 install pillow ddddocr requests loguru
 
+    # 检查 Pillow 是否成功安装
+    python3 -c "from PIL import Image" 2>/dev/null
+    if [ $? -ne 0 ]; then
+        echo "Pillow 未安装，正在安装..."
+        pip3 install pillow
+    else
+        echo "Pillow 已安装"
+    fi
+    
     # 获取用户名和密码
     read -r -p "请输入邮箱: " DAWNUSERNAME
     export DAWNUSERNAME=$DAWNUSERNAME
