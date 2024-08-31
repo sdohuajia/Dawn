@@ -80,6 +80,21 @@ function view_logs() {
     read -p "按任意键返回主菜单..."
 }
 
+# 停止并删除 Dawn 的函数
+function stop_and_remove_dawn() {
+    if pm2 list | grep -q "dawn"; then
+        echo "停止 Dawn..."
+        pm2 stop dawn.py
+        echo "删除 Dawn..."
+        pm2 delete dawn.py
+    else
+        echo "Dawn 未在运行"
+    fi
+
+    # 等待用户按任意键以返回主菜单
+    read -p "按任意键返回主菜单..."
+}
+
 # 主菜单函数
 function main_menu() {
     while true; do
@@ -93,9 +108,10 @@ function main_menu() {
         echo "请选择要执行的操作:"
         echo "1) 安装并启动 Dawn"
         echo "2) 查看日志"
-        echo "3) 退出"
+        echo "3) 停止并删除 Dawn"
+        echo "4) 退出"
 
-        read -p "请输入选项 [1-3]: " choice
+        read -p "请输入选项 [1-4]: " choice
 
         case $choice in
             1)
@@ -105,6 +121,9 @@ function main_menu() {
                 view_logs
                 ;;
             3)
+                stop_and_remove_dawn
+                ;;
+            4)
                 echo "退出脚本..."
                 exit 0
                 ;;
