@@ -10,6 +10,14 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
+# 更新包列表
+function update_and_upgrade() {
+    echo "更新包列表..."
+    sudo apt update
+    echo "升级系统..."
+    sudo apt upgrade -y
+}
+
 # 检查并安装 Node.js 和 npm
 function install_nodejs_and_npm() {
     if command -v node > /dev/null 2>&1; then
@@ -50,14 +58,26 @@ function check_and_install() {
     done
 }
 
+# 安装 Python 包管理工具 pip3
+function install_pip() {
+    if ! command -v pip3 > /dev/null 2>&1; then
+        echo "pip3 未安装，正在安装..."
+        sudo apt-get install -y python3-pip
+    else
+        echo "pip3 已安装"
+    fi
+}
+
 # 安装并启动 Dawn 的函数
 function install_and_start_dawn() {
-    echo "更新包列表..."
-    sudo apt update
-    
+    update_and_upgrade
+
     # 安装 Node.js 和 npm，PM2
     install_nodejs_and_npm
     install_pm2
+
+    # 安装 pip3
+    install_pip
 
     # 安装 Python 包
     pip3 install pillow ddddocr requests loguru
@@ -72,8 +92,7 @@ function install_and_start_dawn() {
 
     wget -O dawn.py https://raw.githubusercontent.com/b1n4he/DawnAuto/main/dawn.py || { echo "下载 dawn.py 失败"; exit 1; }
 
-    # 更新和安装其他必要的软件
-    sudo apt update && sudo apt upgrade -y
+    # 安装其他必要的软件
     check_and_install curl iptables build-essential git wget jq make gcc nano tmux htop nvme-cli pkg-config libssl-dev libleveldb-dev tar clang bsdmainutils ncdu unzip lz4 snapd
 
     # 启动 Dawn
