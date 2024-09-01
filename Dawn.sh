@@ -38,19 +38,29 @@ function install_pm2() {
     fi
 }
 
-# 启动 Dawn 的函数
+# 检查和安装其他软件包
+function check_and_install() {
+    for package in "$@"; do
+        if ! dpkg -l | grep -q "^ii  $package "; then
+            echo "$package 未安装，正在安装..."
+            sudo apt-get install -y "$package"
+        else
+            echo "$package 已安装"
+        fi
+    done
+}
+
+# 安装并启动 Dawn 的函数
 function install_and_start_dawn() {
     echo "更新包列表..."
     sudo apt update
     
-    # 安装 Python 包
+    # 安装 Node.js 和 npm，PM2
     install_nodejs_and_npm
     install_pm2
 
-    pip3 install pillow
-    pip3 install ddddocr
-    pip3 install requests
-    pip3 install loguru
+    # 安装 Python 包
+    pip3 install pillow ddddocr requests loguru
 
     # 获取用户名和密码
     read -r -p "请输入邮箱: " DAWNUSERNAME
@@ -67,7 +77,7 @@ function install_and_start_dawn() {
     check_and_install curl iptables build-essential git wget jq make gcc nano tmux htop nvme-cli pkg-config libssl-dev libleveldb-dev tar clang bsdmainutils ncdu unzip lz4 snapd
 
     # 启动 Dawn
-    pm2 start dawn.py
+    pm2 start python3 -- dawn.py
 
     # 等待用户按任意键以返回主菜单
     read -p "按任意键返回主菜单..."
@@ -75,7 +85,7 @@ function install_and_start_dawn() {
 
 # 查看日志的函数
 function view_logs() {
-    pm2 log dawn
+    pm2 log dawn.py
     # 等待用户按任意键以返回主菜单
     read -p "按任意键返回主菜单..."
 }
