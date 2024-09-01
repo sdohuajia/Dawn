@@ -104,7 +104,7 @@ function install_and_start_dawn() {
 
 # 查看日志的函数
 function view_logs() {
-    pm2 log dawn.py
+    pm2 log dawn
     # 等待用户按任意键以返回主菜单
     read -p "按任意键返回主菜单..."
 }
