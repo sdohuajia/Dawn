@@ -2,8 +2,6 @@ import ast
 import json
 import re
 import requests
-import random
-import time
 import datetime
 import urllib3
 from PIL import Image
@@ -40,13 +38,10 @@ def GetPuzzleID():
     return puzzid
 
 # 检查验证码算式
-def IsValidExpression(expression):
-    # 检查表达式是否为空
-    if not expression.strip():
-        return False
-    # 正则表达式检查是否为6位验证码
-    pattern = r'^[A-Za-z0-9]{6}$'
-    return re.match(pattern, expression) is not None
+def IsValidCaptcha(captcha):
+    # 验证码格式匹配大写字母、小写字母、数字和常见符号
+    pattern = r'^[A-Za-z0-9@!#\$%\^&\*\(\)_\+\-=\[\]\{\};:\'",<>\./?\\|`~]{6,}$'
+    return re.match(pattern, captcha) is not None
 
 # 验证码识别
 def RemixCaptacha(base64_image):
@@ -58,8 +53,8 @@ def RemixCaptacha(base64_image):
     ocr = ddddocr.DdddOcr(show_ad=False)
     ocr.set_ranges(0)
     result = ocr.classification(image)
-    logger.debug(f'[1] 验证码识别结果：{result}，是否为可计算验证码 {IsValidExpression(result)}',)
-    if IsValidExpression(result):
+    logger.debug(f'[1] 验证码识别结果：{result}，是否为有效验证码 {IsValidCaptcha(result)}',)
+    if IsValidCaptcha(result):
         return result
 
 def login(USERNAME, PASSWORD):
