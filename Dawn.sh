@@ -83,7 +83,7 @@ function install_and_start_dawn() {
 # 查看日志的函数
 function view_logs() {
     echo "查看 Dawn 的日志..."
-    pm2 logs dawn
+    pm2 log dawn
     # 等待用户按任意键以返回主菜单
     read -p "按任意键返回主菜单..."
 }
