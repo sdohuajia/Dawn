@@ -1,22 +1,21 @@
 import ast
 import json
 import re
-
 import requests
-import random
-import time
 import datetime
 import urllib3
 from PIL import Image
 import base64
 from io import BytesIO
 import ddddocr
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 from loguru import logger
 
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+# 配置URL
 KeepAliveURL = "https://www.aeropres.in/chromeapi/dawn/v1/userreward/keepalive"
 GetPointURL = "https://www.aeropres.in/api/atom/v1/userreferral/getpoint"
-LoginURL = "https://www.aeropres.in//chromeapi/dawn/v1/user/login/v2"
+LoginURL = "https://www.aeropres.in/chromeapi/dawn/v1/user/login/v2"
 PuzzleID = "https://www.aeropres.in/chromeapi/dawn/v1/puzzle/get-puzzle"
 
 # 创建一个请求会话
@@ -35,30 +34,29 @@ headers = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36"
 }
 
+def GetPuzzleID(session, puzzle_url, headers):
+    try:
+        response = session.get(puzzle_url, headers=headers, verify=False)
+        response.raise_for_status()  # 检查请求是否成功
+        data = response.json()
+        puzzle_id = data['puzzle_id']
+        return puzzle_id
+    except requests.exceptions.RequestException as e:
+        logger.error(f"There was a problem with the fetch operation: {e}")
+        return None
 
-def GetPuzzleID():
-    r = session.get(PuzzleID, headers=headers,verify=False).json()
-    puzzid = r['puzzle_id']
-    return puzzid
-
-# 检查验证码算式
-def IsValidExpression(expression):
-    # 检查表达式是否为空
-    if not expression.strip():
-        return False
-    # 使用正则表达式检查基本格式
-    # 至少包含一个数字和一个运算符
-    pattern = r'^(?=.*\d)(?=.*[\+\-\*/])[\d+\-*/().\s]+$'
-    if not re.match(pattern, expression):
+def IsValidCode(code):
+    # 验证验证码是否为6位字母和数字的组合
+    pattern = r'^[A-Za-z0-9]{6}$'
+    if not re.match(pattern, code):
         return False
     # 使用 ast 模块解析
     try:
-        ast.parse(expression, mode='eval')
+        ast.parse(code, mode='eval')
         return True
     except (SyntaxError, ValueError):
         return False
 
-# 验证码识别
 def RemixCaptacha(base64_image):
     # 将Base64字符串解码为二进制数据
     image_data = base64.b64decode(base64_image)
@@ -66,16 +64,19 @@ def RemixCaptacha(base64_image):
     image = Image.open(BytesIO(image_data))
     # 创建OCR对象
     ocr = ddddocr.DdddOcr(show_ad=False)
-    ocr.set_ranges(0)
     result = ocr.classification(image)
-    logger.debug(f'[1] 验证码识别结果：{result}，是否为可计算验证码 {IsValidExpression(result)}',)
-    if IsValidExpression(result) == True:
-        rc = eval(result)
-        return rc
+    # 检查是否为有效的6位验证码
+    if IsValidCode(result):
+        return result
+    else:
+        logger.error(f'识别结果无效: {result}')
+        return None
 
-
-def login(USERNAME,PASSWORD):
-    puzzid = GetPuzzleID()
+def login(USERNAME, PASSWORD):
+    puzzid = GetPuzzleID(session, PuzzleID, headers)
+    if not puzzid:
+        logger.error("Failed to get puzzle ID.")
+        return None
     current_time = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='milliseconds').replace("+00:00", "Z")
     data = {
         "username": USERNAME,
@@ -84,44 +85,63 @@ def login(USERNAME,PASSWORD):
             "_v": "1.0.7",
             "datetime": current_time
         },
-        "puzzle_id":puzzid ,
+        "puzzle_id": puzzid,
         "ans": "0"
     }
     # 验证码识别部分
-    refresh_image = session.get(f'https://www.aeropres.in/chromeapi/dawn/v1/puzzle/get-puzzle-image?puzzle_id={puzzid}',headers=headers,verify=False).json()
-    code = RemixCaptacha(refresh_image['imgBase64'])
-    if code :
-        logger.success(f'[√] 成功获取验证码结果 {code}',)
-        data['ans'] = str(code)
-        login_data = json.dumps(data)
-        logger.info(f'[2] 登录数据： {login_data}')
-        try:
-            r = session.post(LoginURL,login_data,headers=headers,verify=False).json()
+    try:
+        refresh_image = session.get(f'https://www.aeropres.in/chromeapi/dawn/v1/puzzle/get-puzzle-image?puzzle_id={puzzid}', headers=headers, verify=False).json()
+        code = RemixCaptacha(refresh_image['imgBase64'])
+        if code:
+            logger.success(f'[√] 成功获取验证码结果 {code}')
+            data['ans'] = str(code)
+            login_data = json.dumps(data)
+            logger.info(f'[2] 登录数据： {login_data}')
+            response = session.post(LoginURL, data=login_data, headers=headers, verify=False)
+            response.raise_for_status()  # 检查请求是否成功
+            r = response.json()
             token = r['data']['token']
             logger.success(f'[√] 成功获取AuthToken {token}')
             return token
-        except Exception as e:
-            logger.error(e)
+        else:
+            logger.error("Failed to recognize captcha code.")
+            return None
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Request failed during login: {e}")
+        return None
 
-def KeepAlive(USERNAME,TOKEN):
-    data = {"username": USERNAME,"extensionid":"fpdkjdnhkakefebpekbdhillbhonfjjp","numberoftabs":0,"_v":"1.0.7"}
+def KeepAlive(USERNAME, TOKEN):
+    data = {
+        "username": USERNAME,
+        "extensionid": "fpdkjdnhkakefebpekbdhillbhonfjjp",
+        "numberoftabs": 0,
+        "_v": "1.0.7"
+    }
     json_data = json.dumps(data)
-    headers['authorization'] = "Berear " + str(TOKEN)
-    r = session.post(KeepAliveURL,data=json_data,headers=headers,verify=False).json()
-    logger.info(f'[3] 保持链接中... {r}')
-
+    headers['authorization'] = "Bearer " + str(TOKEN)
+    try:
+        response = session.post(KeepAliveURL, data=json_data, headers=headers, verify=False)
+        response.raise_for_status()  # 检查请求是否成功
+        r = response.json()
+        logger.info(f'[3] 保持链接中... {r}')
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Request failed during keep alive: {e}")
 
 def GetPoint(TOKEN):
-    headers['authorization'] = "Berear " + str(TOKEN)
-    r = session.get(GetPointURL,headers=headers,verify=False).json()
-    logger.success(f'[√] 成功获取Point {r}')
+    headers['authorization'] = "Bearer " + str(TOKEN)
+    try:
+        response = session.get(GetPointURL, headers=headers, verify=False)
+        response.raise_for_status()  # 检查请求是否成功
+        r = response.json()
+        logger.success(f'[√] 成功获取Point {r}')
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Request failed during get point: {e}")
 
-
-def main(USERANEM, PASSWORD):
+def main(USERNAME, PASSWORD):
     TOKEN = ''
-    if TOKEN == '':
+    if not TOKEN:
         while True:
-            TOKEN = login(USERANEM, PASSWORD)
+            TOKEN = login(USERNAME, PASSWORD)
             if TOKEN:
                 break
     # 初始化计数器
@@ -130,7 +150,7 @@ def main(USERANEM, PASSWORD):
     while True:
         try:
             # 执行保持活动和获取点数的操作
-            KeepAlive(USERANEM, TOKEN)
+            KeepAlive(USERNAME, TOKEN)
             GetPoint(TOKEN)
             # 更新计数器
             count += 1
@@ -138,17 +158,14 @@ def main(USERANEM, PASSWORD):
             if count >= max_count:
                 logger.debug(f'[√] 重新登录获取Token...')
                 while True:
-                    TOKEN = login(USERANEM, PASSWORD)
+                    TOKEN = login(USERNAME, PASSWORD)
                     if TOKEN:
                         break
                 count = 0  # 重置计数器
         except Exception as e:
-            logger.error(e)
-
-
+            logger.error(f"An unexpected error occurred: {e}")
 
 if __name__ == '__main__':
-    with open('password.txt','r') as f:
-        username,password = f.readline().strip().split(':')
-    main(username,password)
-
+    with open('password.txt', 'r') as f:
+        username, password = f.readline().strip().split(':')
+    main(username, password)
