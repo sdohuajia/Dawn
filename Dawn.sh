@@ -113,9 +113,9 @@ function view_logs() {
 function stop_and_remove_dawn() {
     if pm2 list | grep -q "dawn"; then
         echo "停止 Dawn..."
-        pm2 stop dawn.py
+        pm2 stop dawn
         echo "删除 Dawn..."
-        pm2 delete dawn.py
+        pm2 delete dawn
     else
         echo "Dawn 未在运行"
     fi
