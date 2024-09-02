@@ -96,7 +96,7 @@ function install_and_start_dawn() {
     check_and_install curl iptables build-essential git wget jq make gcc nano tmux htop nvme-cli pkg-config libssl-dev libleveldb-dev tar clang bsdmainutils ncdu unzip lz4 snapd
 
     # 启动 Dawn
-    pm2 start python3 -- dawn.py
+    pm2 start python3 -- name dawn -- dawn.py
 
     # 等待用户按任意键以返回主菜单
     read -p "按任意键返回主菜单..."
