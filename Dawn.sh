@@ -10,14 +10,6 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
-# 更新包列表
-function update_and_upgrade() {
-    echo "更新包列表..."
-    sudo apt update
-    echo "升级系统..."
-    sudo apt upgrade -y
-}
-
 # 检查并安装 Node.js 和 npm
 function install_nodejs_and_npm() {
     if command -v node > /dev/null 2>&1; then
@@ -36,26 +28,14 @@ function install_nodejs_and_npm() {
     fi
 }
 
-# 安装 PM2 的函数
+# 检查并安装 PM2
 function install_pm2() {
-    if ! command -v pm2 &> /dev/null; then
+    if command -v pm2 > /dev/null 2>&1; then
+        echo "PM2 已安装"
+    else
         echo "PM2 未安装，正在安装..."
         npm install pm2@latest -g
-    else
-        echo "PM2 已安装"
     fi
-}
-
-# 检查和安装其他软件包
-function check_and_install() {
-    for package in "$@"; do
-        if ! dpkg -l | grep -q "^ii  $package "; then
-            echo "$package 未安装，正在安装..."
-            sudo apt-get install -y "$package"
-        else
-            echo "$package 已安装"
-        fi
-    done
 }
 
 # 安装 Python 包管理工具 pip3
@@ -68,19 +48,23 @@ function install_pip() {
     fi
 }
 
+# 安装 Python 包
+function install_python_packages() {
+    echo "安装 Python 包..."
+    pip3 install pillow ddddocr requests loguru
+}
+
 # 安装并启动 Dawn 的函数
 function install_and_start_dawn() {
-    update_and_upgrade
+    # 更新和安装必要的软件
+    sudo apt update && sudo apt upgrade -y
+    sudo apt install -y curl iptables build-essential git wget jq make gcc nano tmux htop nvme-cli pkg-config libssl-dev libleveldb-dev tar clang bsdmainutils ncdu unzip lz4 snapd
 
-    # 安装 Node.js 和 npm，PM2
+    # 安装 Node.js 和 npm，PM2，pip3 和 Python 包
     install_nodejs_and_npm
     install_pm2
-
-    # 安装 pip3
     install_pip
-
-    # 安装 Python 包
-    pip3 install pillow ddddocr requests loguru
+    install_python_packages
 
     # 获取用户名和密码
     read -r -p "请输入邮箱: " DAWNUSERNAME
@@ -90,21 +74,16 @@ function install_and_start_dawn() {
 
     echo "$DAWNUSERNAME:$DAWNPASSWORD" > password.txt
 
-    wget -O dawn.py https://raw.githubusercontent.com/b1n4he/DawnAuto/main/dawn.py || { echo "下载 dawn.py 失败"; exit 1; }
-
-    # 安装其他必要的软件
-    check_and_install curl iptables build-essential git wget jq make gcc nano tmux htop nvme-cli pkg-config libssl-dev libleveldb-dev tar clang bsdmainutils ncdu unzip lz4 snapd
+    wget -O dawn.py https://raw.githubusercontent.com/b1n4he/DawnAuto/main/dawn.py
 
     # 启动 Dawn
-    pm2 start dawn.py
-
-    # 等待用户按任意键以返回主菜单
-    read -p "按任意键返回主菜单..."
+    pm2 start python3 --name dawn -- dawn.py
 }
 
 # 查看日志的函数
 function view_logs() {
-    pm2 log dawn.py
+    echo "查看 Dawn 的日志..."
+    pm2 logs dawn
     # 等待用户按任意键以返回主菜单
     read -p "按任意键返回主菜单..."
 }
@@ -113,9 +92,9 @@ function view_logs() {
 function stop_and_remove_dawn() {
     if pm2 list | grep -q "dawn"; then
         echo "停止 Dawn..."
-        pm2 stop dawn.py
+        pm2 stop dawn
         echo "删除 Dawn..."
-        pm2 delete dawn.py
+        pm2 delete dawn
     else
         echo "Dawn 未在运行"
     fi
