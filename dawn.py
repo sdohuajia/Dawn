@@ -1,9 +1,6 @@
-import ast
 import json
 import re
 import requests
-import random
-import time
 import datetime
 import urllib3
 from PIL import Image
@@ -11,6 +8,9 @@ import base64
 from io import BytesIO
 import ddddocr
 from loguru import logger
+
+# 禁用不安全请求警告
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # API URLs
 KeepAliveURL = "https://www.aeropres.in/chromeapi/dawn/v1/userreward/keepalive"
@@ -36,21 +36,33 @@ headers = {
 
 # 获取验证码 ID 的函数
 def GetPuzzleID():
-    r = session.get(PuzzleID, headers=headers, verify=False).json()
-    puzzid = r['puzzle_id']
-    return puzzid
+    try:
+        r = session.get(PuzzleID, headers=headers, verify=False)
+        r.raise_for_status()  # 确保请求成功
+        logger.debug(f'[1] 获取验证码 ID 响应内容: {r.text}')
+        data = r.json()
+        puzzid = data['puzzle_id']
+        return puzzid
+    except requests.RequestException as e:
+        logger.error(f'获取验证码 ID 时出错: {e}')
+    except json.JSONDecodeError as e:
+        logger.error(f'解析验证码 ID 响应时出错: {e}')
+    return None
 
 # 获取验证码图像的 Base64 编码
 def get_puzzle_base64(puzzle_id):
     try:
         response = requests.get(f"https://www.aeropres.in/chromeapi/dawn/v1/puzzle/get-puzzle-image?puzzle_id={puzzle_id}")
         response.raise_for_status()  # 确保请求成功
+        logger.debug(f'[2] 获取验证码图像响应内容: {response.text}')
         data = response.json()
         img_base64 = data.get("imgBase64")
         return img_base64
     except requests.RequestException as e:
         logger.error(f"获取验证码图像时出错: {e}")
-        return None
+    except json.JSONDecodeError as e:
+        logger.error(f'解析验证码图像响应时出错: {e}')
+    return None
 
 # 检查验证码是否符合预期格式
 def IsValidExpression(expression):
@@ -85,7 +97,7 @@ def RemixCaptacha(base64_image):
     ocr = ddddocr.DdddOcr(show_ad=False)
     ocr.set_ranges(0)
     result = ocr.classification(new_image)
-    logger.debug(f'[1] 验证码识别结果：{result}，是否为可计算验证码 {IsValidExpression(result)}')
+    logger.debug(f'[3] 验证码识别结果：{result}，是否为可计算验证码 {IsValidExpression(result)}')
     if IsValidExpression(result):
         return result
     return None
@@ -93,6 +105,10 @@ def RemixCaptacha(base64_image):
 # 登录函数
 def login(USERNAME, PASSWORD):
     puzzid = GetPuzzleID()  # 获取验证码 ID
+    if not puzzid:
+        logger.error('无法获取验证码 ID，登录失败')
+        return None
+
     current_time = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='milliseconds').replace("+00:00", "Z")
     data = {
         "username": USERNAME,
@@ -112,15 +128,19 @@ def login(USERNAME, PASSWORD):
             logger.success(f'[√] 成功获取验证码结果 {code}')
             data['ans'] = str(code)
             login_data = json.dumps(data)
-            logger.info(f'[2] 登录数据： {login_data}')
+            logger.info(f'[4] 登录数据： {login_data}')
             try:
-                r = session.post(LoginURL, login_data, headers=headers, verify=False).json()
-                logger.debug(r)
-                token = r['data']['token']
+                r = session.post(LoginURL, login_data, headers=headers, verify=False)
+                r.raise_for_status()  # 确保请求成功
+                logger.debug(f'[5] 登录响应内容: {r.text}')
+                response_data = r.json()
+                token = response_data['data']['token']
                 logger.success(f'[√] 成功获取AuthToken {token}')
                 return token
-            except Exception as e:
+            except requests.RequestException as e:
                 logger.error(f'[x] 登录失败: {e}')
+            except json.JSONDecodeError as e:
+                logger.error(f'解析登录响应时出错: {e}')
     return None
 
 # 保持活动函数
@@ -129,18 +149,20 @@ def KeepAlive(USERNAME, TOKEN):
     json_data = json.dumps(data)
     headers['authorization'] = "Bearer " + str(TOKEN)
     try:
-        r = session.post(KeepAliveURL, data=json_data, headers=headers, verify=False).json()
-        logger.info(f'[3] 保持链接中... {r}')
-    except Exception as e:
+        r = session.post(KeepAliveURL, data=json_data, headers=headers, verify=False)
+        r.raise_for_status()  # 确保请求成功
+        logger.info(f'[6] 保持链接中... {r.json()}')
+    except requests.RequestException as e:
         logger.error(f'保持链接失败: {e}')
 
 # 获取积分函数
 def GetPoint(TOKEN):
     headers['authorization'] = "Bearer " + str(TOKEN)
     try:
-        r = session.get(GetPointURL, headers=headers, verify=False).json()
-        logger.success(f'[√] 成功获取Point {r}')
-    except Exception as e:
+        r = session.get(GetPointURL, headers=headers, verify=False)
+        r.raise_for_status()  # 确保请求成功
+        logger.success(f'[√] 成功获取Point {r.json()}')
+    except requests.RequestException as e:
         logger.error(f'获取Point失败: {e}')
 
 # 主函数
