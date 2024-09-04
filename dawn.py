@@ -12,9 +12,6 @@ from io import BytesIO
 import ddddocr
 from loguru import logger
 
-# 禁用不安全请求警告
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
 # API URLs
 KeepAliveURL = "https://www.aeropres.in/chromeapi/dawn/v1/userreward/keepalive"
 GetPointURL = "https://www.aeropres.in/api/atom/v1/userreferral/getpoint"
