@@ -1,14 +1,17 @@
-import cv2
-import numpy as np
-import requests
-import re
+import ast
 import json
+import re
+import requests
+import random
+import time
 import datetime
+import urllib3
 from PIL import Image
-import pytesseract
-from io import BytesIO
-from loguru import logger
 import base64
+from io import BytesIO
+import ddddocr
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+from loguru import logger
 
 # URLs
 KeepAliveURL = "https://www.aeropres.in/chromeapi/dawn/v1/userreward/keepalive"
@@ -38,44 +41,45 @@ def GetPuzzleID():
     puzzid = r['puzzle_id']
     return puzzid
 
-# 检查验证码格式，6位字符、数字及部分特殊符号
+# 检查验证码算式，扩展为支持6位的字母、数字以及部分特殊符号
 def IsValidExpression(expression):
-    pattern = r'^[A-Za-z0-9]{6}$'  # 简化为字母数字6位
-    return bool(re.match(pattern, expression))
+    # 扩展正则表达式以支持字母、数字和一些特殊符号
+    pattern = r'^[A-Za-z0-9!@#$%^&*()_+]{6}$'
+    if re.match(pattern, expression):
+        return True
+    return False
 
-# 图像预处理与验证码识别
-def ProcessCaptcha(base64_image):
+# 验证码识别，增加特殊符号处理和图像预处理
+def RemixCaptacha(base64_image):
     # 将Base64字符串解码为二进制数据
     image_data = base64.b64decode(base64_image)
     # 使用BytesIO将二进制数据转换为一个可读的文件对象
     image = Image.open(BytesIO(image_data))
 
-    # 将图像转换为灰度
-    gray = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2GRAY)
+    # 图像预处理，增加去噪和二值化步骤
+    image = image.convert('L')  # 转换为灰度图像
+    threshold = 160  # 设置二值化阈值
+    image = image.point(lambda p: p > threshold and 255)  # 二值化处理
 
-    # 使用二值化处理
-    _, binary = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY_INV)
+    # 创建新的干净背景图像
+    new_image = Image.new('L', image.size, 'white')
+    width, height = image.size
+    for x in range(width):
+        for y in range(height):
+            pixel = image.getpixel((x, y))
+            if pixel < threshold:  # 根据阈值判断是否保留像素
+                new_image.putpixel((x, y), 0)  # 黑色
+            else:
+                new_image.putpixel((x, y), 255)  # 白色
 
-    # 使用形态学操作去噪
-    kernel = np.ones((2, 2), np.uint8)
-    cleaned = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel)
-
-    # 找到字符的轮廓
-    contours, _ = cv2.findContours(cleaned, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # OCR识别
+    ocr = ddddocr.DdddOcr(show_ad=False)
+    ocr.set_ranges(0)  # 增加识别范围支持符号
+    result = ocr.classification(new_image)
+    logger.debug(f'[1] 验证码识别结果：{result}，是否为可计算验证码 {IsValidExpression(result)}')
     
-    # 提取每个轮廓区域并进行OCR识别
-    results = []
-    for cnt in contours:
-        x, y, w, h = cv2.boundingRect(cnt)
-        char_image = cleaned[y:y+h, x:x+w]
-        # 使用Tesseract识别单个字符
-        text = pytesseract.image_to_string(char_image, config='--psm 10')
-        results.append(text.strip())
-
-    captcha_result = ''.join(results)
-    logger.debug(f'验证码识别结果: {captcha_result}')
-    if IsValidExpression(captcha_result):
-        return captcha_result
+    if IsValidExpression(result):
+        return result
 
     return None
 
@@ -94,21 +98,22 @@ def login(USERNAME, PASSWORD):
         "ans": "0"
     }
     
-    # 获取验证码图片并识别
+    # 验证码识别部分
     refresh_image = session.get(f'https://www.aeropres.in/chromeapi/dawn/v1/puzzle/get-puzzle-image?puzzle_id={puzzid}', headers=headers, verify=False).json()
-    code = ProcessCaptcha(refresh_image['imgBase64'])
+    code = RemixCaptacha(refresh_image['imgBase64'])
     if code:
-        logger.success(f'[√] 成功获取验证码结果: {code}')
+        logger.success(f'[√] 成功获取验证码结果 {code}')
         data['ans'] = str(code)
         login_data = json.dumps(data)
         logger.info(f'[2] 登录数据： {login_data}')
         try:
             r = session.post(LoginURL, login_data, headers=headers, verify=False).json()
+            logger.debug(r)
             token = r['data']['token']
-            logger.success(f'[√] 成功获取AuthToken: {token}')
+            logger.success(f'[√] 成功获取AuthToken {token}')
             return token
         except Exception as e:
-            logger.error(f'[x] 登录失败，验证码错误，错误信息: {e}')
+            logger.error(f'[x] 验证码错误，尝试重新获取...')
     else:
         logger.error(f'[x] 无法识别验证码')
 
@@ -124,7 +129,7 @@ def KeepAlive(USERNAME, TOKEN):
 def GetPoint(TOKEN):
     headers['authorization'] = "Bearer " + str(TOKEN)
     r = session.get(GetPointURL, headers=headers, verify=False).json()
-    logger.success(f'[√] 成功获取Point: {r}')
+    logger.success(f'[√] 成功获取Point {r}')
 
 # 主函数
 def main(USERNAME, PASSWORD):
@@ -139,16 +144,19 @@ def main(USERNAME, PASSWORD):
     max_count = 200  # 每运行 200 次重新获取 TOKEN
     while True:
         try:
+            # 执行保持活动和获取点数的操作
             KeepAlive(USERNAME, TOKEN)
             GetPoint(TOKEN)
+            # 更新计数器
             count += 1
+            # 每达到 max_count 次后重新获取 TOKEN
             if count >= max_count:
                 logger.debug(f'[√] 重新登录获取Token...')
                 while True:
                     TOKEN = login(USERNAME, PASSWORD)
                     if TOKEN:
                         break
-                count = 0
+                count = 0  # 重置计数器
         except Exception as e:
             logger.error(e)
 
