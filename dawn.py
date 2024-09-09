@@ -10,9 +10,8 @@ from PIL import Image
 import base64
 from io import BytesIO
 import ddddocr
-from loguru import logger
-
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+from loguru import logger
 
 # URLs
 KeepAliveURL = "https://www.aeropres.in/chromeapi/dawn/v1/userreward/keepalive"
@@ -36,49 +35,52 @@ headers = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36"
 }
 
-# 获取 PuzzleID
+# 获取 Puzzle ID
 def GetPuzzleID():
-    try:
-        r = session.get(PuzzleID, headers=headers, verify=False)
-        logger.debug(f'[√] PuzzleID 请求响应状态码: {r.status_code}')
-        r_json = r.json()
-        puzzid = r_json['puzzle_id']
-        return puzzid
-    except Exception as e:
-        logger.error(f'[x] 获取PuzzleID出错: {e}')
+    r = session.get(PuzzleID, headers=headers, verify=False).json()
+    puzzid = r['puzzle_id']
+    return puzzid
 
-# 检查验证码是否为有效表达式
+# 检查验证码算式，扩展为支持6位的字母、数字以及部分特殊符号
 def IsValidExpression(expression):
-    pattern = r'^[A-Za-z0-9]{6}$'
-    return bool(re.match(pattern, expression))
+    # 扩展正则表达式以支持字母、数字和一些特殊符号
+    pattern = r'^[A-Za-z0-9!@#$%^&*()_+]{6}$'
+    if re.match(pattern, expression):
+        return True
+    return False
 
-# 验证码识别
+# 验证码识别，增加特殊符号处理和图像预处理
 def RemixCaptacha(base64_image):
-    try:
-        image_data = base64.b64decode(base64_image)
-        image = Image.open(BytesIO(image_data))
+    # 将Base64字符串解码为二进制数据
+    image_data = base64.b64decode(base64_image)
+    # 使用BytesIO将二进制数据转换为一个可读的文件对象
+    image = Image.open(BytesIO(image_data))
 
-        # 将图像转换为 RGB 模式
-        image = image.convert('RGB')
-        new_image = Image.new('RGB', image.size, 'white')
-        width, height = image.size
+    # 图像预处理，增加去噪和二值化步骤
+    image = image.convert('L')  # 转换为灰度图像
+    threshold = 160  # 设置二值化阈值
+    image = image.point(lambda p: p > threshold and 255)  # 二值化处理
 
-        for x in range(width):
-            for y in range(height):
-                pixel = image.getpixel((x, y))
-                if pixel == (48, 48, 48):  # 黑色像素
-                    new_image.putpixel((x, y), pixel)
-                else:
-                    new_image.putpixel((x, y), (255, 255, 255))  # 白色背景
+    # 创建新的干净背景图像
+    new_image = Image.new('L', image.size, 'white')
+    width, height = image.size
+    for x in range(width):
+        for y in range(height):
+            pixel = image.getpixel((x, y))
+            if pixel < threshold:  # 根据阈值判断是否保留像素
+                new_image.putpixel((x, y), 0)  # 黑色
+            else:
+                new_image.putpixel((x, y), 255)  # 白色
 
-        ocr = ddddocr.DdddOcr(show_ad=False)
-        result = ocr.classification(new_image)
-        logger.debug(f'[1] 验证码识别结果：{result}, 是否为可计算验证码: {IsValidExpression(result)}')
+    # OCR识别
+    ocr = ddddocr.DdddOcr(show_ad=False)
+    ocr.set_ranges(0)  # 增加识别范围支持符号
+    result = ocr.classification(new_image)
+    logger.debug(f'[1] 验证码识别结果：{result}，是否为可计算验证码 {IsValidExpression(result)}')
+    
+    if IsValidExpression(result):
+        return result
 
-        if IsValidExpression(result):
-            return result
-    except Exception as e:
-        logger.error(f'[x] 验证码识别失败: {e}')
     return None
 
 # 登录函数
@@ -97,93 +99,69 @@ def login(USERNAME, PASSWORD):
     }
     
     # 验证码识别部分
-    refresh_image = session.get(f'https://www.aeropres.in/chromeapi/dawn/v1/puzzle/get-puzzle-image?puzzle_id={puzzid}', headers=headers, verify=False)
-    logger.debug(f'[√] 验证码图片响应状态码: {refresh_image.status_code}')
-    
-    if refresh_image.status_code == 200:
-        refresh_image_json = refresh_image.json()
-        code = RemixCaptacha(refresh_image_json['imgBase64'])
-        if code:
-            logger.success(f'[√] 成功获取验证码结果 {code}')
-            data['ans'] = str(code)
-            login_data = json.dumps(data)
-            logger.info(f'[2] 登录数据： {login_data}')
-            try:
-                r = session.post(LoginURL, login_data, headers=headers, verify=False)
-                logger.debug(f'[√] 登录请求响应状态码: {r.status_code}')
-                logger.debug(f'[√] 登录请求响应内容: {r.text}')
-                if r.status_code == 200:
-                    login_response_json = r.json()
-                    token = login_response_json['data']['token']
-                    logger.success(f'[√] 成功获取AuthToken {token}')
-                    return token
-                else:
-                    logger.error(f'[x] 登录请求失败，状态码: {r.status_code}, 响应内容: {r.text}')
-            except json.JSONDecodeError as json_err:
-                logger.error(f'[x] 无法解析响应为JSON: {json_err}')
-            except Exception as e:
-                logger.error(f'[x] 请求发生错误: {e}')
-        else:
-            logger.error(f'[x] 无法识别验证码')
+    refresh_image = session.get(f'https://www.aeropres.in/chromeapi/dawn/v1/puzzle/get-puzzle-image?puzzle_id={puzzid}', headers=headers, verify=False).json()
+    code = RemixCaptacha(refresh_image['imgBase64'])
+    if code:
+        logger.success(f'[√] 成功获取验证码结果 {code}')
+        data['ans'] = str(code)
+        login_data = json.dumps(data)
+        logger.info(f'[2] 登录数据： {login_data}')
+        try:
+            r = session.post(LoginURL, login_data, headers=headers, verify=False).json()
+            logger.debug(r)
+            token = r['data']['token']
+            logger.success(f'[√] 成功获取AuthToken {token}')
+            return token
+        except Exception as e:
+            logger.error(f'[x] 验证码错误，尝试重新获取...')
     else:
-        logger.error(f'[x] 验证码图片获取失败，状态码: {refresh_image.status_code}')
+        logger.error(f'[x] 无法识别验证码')
 
 # 保持活动状态
 def KeepAlive(USERNAME, TOKEN):
     data = {"username": USERNAME, "extensionid": "fpdkjdnhkakefebpekbdhillbhonfjjp", "numberoftabs": 0, "_v": "1.0.7"}
     json_data = json.dumps(data)
     headers['authorization'] = "Bearer " + str(TOKEN)
-    r = session.post(KeepAliveURL, data=json_data, headers=headers, verify=False)
-    logger.debug(f'[√] 保持活动请求响应状态码: {r.status_code}')
-    if r.status_code == 200:
-        try:
-            r_json = r.json()
-            logger.info(f'[3] 保持链接中... {r_json}')
-        except json.JSONDecodeError as json_err:
-            logger.error(f'[x] 无法解析响应为JSON: {json_err}')
-    else:
-        logger.error(f'[x] 保持活动请求失败，状态码: {r.status_code}, 响应内容: {r.text}')
+    r = session.post(KeepAliveURL, data=json_data, headers=headers, verify=False).json()
+    logger.info(f'[3] 保持链接中... {r}')
 
 # 获取 Point
 def GetPoint(TOKEN):
     headers['authorization'] = "Bearer " + str(TOKEN)
-    r = session.get(GetPointURL, headers=headers, verify=False)
-    logger.debug(f'[√] 获取Point请求响应状态码: {r.status_code}')
-    if r.status_code == 200:
-        try:
-            r_json = r.json()
-            logger.success(f'[√] 成功获取Point {r_json}')
-        except json.JSONDecodeError as json_err:
-            logger.error(f'[x] 无法解析响应为JSON: {json_err}')
-    else:
-        logger.error(f'[x] 获取Point请求失败，状态码: {r.status_code}, 响应内容: {r.text}')
+    r = session.get(GetPointURL, headers=headers, verify=False).json()
+    logger.success(f'[√] 成功获取Point {r}')
 
-# 主程序入口
-def main(USERANEM, PASSWORD):
+# 主函数
+def main(USERNAME, PASSWORD):
     TOKEN = ''
     if TOKEN == '':
         while True:
-            TOKEN = login(USERANEM, PASSWORD)
+            TOKEN = login(USERNAME, PASSWORD)
             if TOKEN:
                 break
+    # 初始化计数器
     count = 0
     max_count = 200  # 每运行 200 次重新获取 TOKEN
     while True:
         try:
-            KeepAlive(USERANEM, TOKEN)
+            # 执行保持活动和获取点数的操作
+            KeepAlive(USERNAME, TOKEN)
             GetPoint(TOKEN)
+            # 更新计数器
             count += 1
+            # 每达到 max_count 次后重新获取 TOKEN
             if count >= max_count:
                 logger.debug(f'[√] 重新登录获取Token...')
                 while True:
-                    TOKEN = login(USERANEM, PASSWORD)
+                    TOKEN = login(USERNAME, PASSWORD)
                     if TOKEN:
                         break
-                count = 0
+                count = 0  # 重置计数器
         except Exception as e:
             logger.error(e)
 
+# 入口
 if __name__ == '__main__':
-    with open('password.txt','r') as f:
+    with open('password.txt', 'r') as f:
         username, password = f.readline().strip().split(':')
     main(username, password)
