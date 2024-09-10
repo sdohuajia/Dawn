@@ -18,6 +18,10 @@ GetPointURL = "https://www.aeropres.in/api/atom/v1/userreferral/getpoint"
 LoginURL = "https://www.aeropres.in//chromeapi/dawn/v1/user/login/v2"
 PuzzleID = "https://www.aeropres.in/chromeapi/dawn/v1/puzzle/get-puzzle"
 
+# YesCaptcha API 配置
+YESCAPTCHA_API_KEY = "your_yescaptcha_api_key"  # 替换为你自己的 YesCaptcha API 密钥
+YESCAPTCHA_URL = "https://api.yescaptcha.com/solve"  # YesCaptcha 的 API 端点
+
 # 创建一个请求会话
 session = requests.Session()
 
@@ -41,40 +45,39 @@ def GetPuzzleID():
 
 # 检查验证码算式
 def IsValidExpression(expression):
-    # 更新正则表达式，允许字母、数字和常见的数学符号
     pattern = r'^[A-Za-z0-9\+\-\*/]{6}$'
     if re.match(pattern, expression):
         return True
     return False
 
-# 验证码识别
+# YesCaptcha 验证码识别
+def YesCaptchaRecognition(base64_image):
+    # YesCaptcha API 请求数据
+    payload = {
+        "api_key": YESCAPTCHA_API_KEY,
+        "tasks": [{
+            "type": "image_to_text",
+            "body": base64_image
+        }]
+    }
+
+    # 发送验证码图片到 YesCaptcha
+    response = requests.post(YESCAPTCHA_URL, json=payload)
+    result = response.json()
+
+    if result.get("success") and result["tasks"][0].get("result"):
+        captcha_code = result["tasks"][0]["result"]
+        logger.success(f'[√] 成功通过 YesCaptcha 获取验证码: {captcha_code}')
+        return captcha_code
+    else:
+        logger.error(f'[x] YesCaptcha 验证码识别失败，错误信息: {result}')
+        return None
+
+# 替换 RemixCaptacha 函数为 YesCaptcha 接入
 def RemixCaptacha(base64_image):
-    # 将Base64字符串解码为二进制数据
-    image_data = base64.b64decode(base64_image)
-    # 使用BytesIO将二进制数据转换为一个可读的文件对象
-    image = Image.open(BytesIO(image_data))
-
-    # 将图像转换为 RGB 模式
-    image = image.convert('RGB')
-    # 创建一个新的图像（白色背景）
-    new_image = Image.new('RGB', image.size, 'white')
-    # 获取图像的宽度和高度
-    width, height = image.size
-    # 遍历所有像素
-    for x in range(width):
-        for y in range(height):
-            pixel = image.getpixel((x, y))
-            # 如果像素是黑色，则保留；否则设为白色
-            if pixel == (48, 48, 48):  # 黑色像素
-                new_image.putpixel((x, y), pixel)  # 保留原始黑色
-            else:
-                new_image.putpixel((x, y), (255, 255, 255))  # 替换为白色
-
-    # 创建OCR对象
-    ocr = ddddocr.DdddOcr(show_ad=False)
-    ocr.set_ranges(0)  # 设置OCR识别范围，包含更多符号
-    result = ocr.classification(new_image)
-    logger.debug(f'[1] 验证码识别结果：{result}，是否为可计算验证码 {IsValidExpression(result)}')
+    # 调用 YesCaptcha 来识别验证码
+    result = YesCaptchaRecognition(base64_image)
+    logger.debug(f'[1] YesCaptcha 验证码识别结果：{result}，是否为可计算验证码 {IsValidExpression(result)}')
 
     if IsValidExpression(result):
         return result
@@ -137,31 +140,26 @@ def GetPoint(TOKEN):
 # 主函数
 def main(USERNAME, PASSWORD):
     TOKEN = ''
-    if TOKEN == '':
-        while True:
+    last_login_time = None  # 记录上次登录的时间
+    
+    while True:
+        current_time = time.time()
+        
+        # 如果从上次登录时间起超过 12 小时（43200 秒），则重新登录
+        if last_login_time is None or (current_time - last_login_time) > 43200:
             TOKEN = login(USERNAME, PASSWORD)
             if TOKEN:
-                break
-    # 初始化计数器
-    count = 0
-    max_count = 200  # 每运行 200 次重新获取 TOKEN
-    while True:
+                last_login_time = current_time  # 更新上次登录时间
+                logger.info(f'[√] 成功登录，12 小时后将重新登录')
+        
         try:
             # 执行保持活动和获取点数的操作
             KeepAlive(USERNAME, TOKEN)
             GetPoint(TOKEN)
-            # 更新计数器
-            count += 1
-            # 每达到 max_count 次后重新获取 TOKEN
-            if count >= max_count:
-                logger.debug(f'[√] 重新登录获取Token...')
-                while True:
-                    TOKEN = login(USERNAME, PASSWORD)
-                    if TOKEN:
-                        break
-                count = 0  # 重置计数器
         except Exception as e:
             logger.error(e)
+        
+        time.sleep(300)  # 每5分钟执行一次保持会话和获取积分操作
 
 if __name__ == '__main__':
     with open('password.txt', 'r') as f:
