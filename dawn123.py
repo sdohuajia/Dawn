@@ -69,7 +69,7 @@ def get_yescaptcha_result(task_id):
 
     for _ in range(10):
         try:
-            response = session.post(YESCAPTCHA_RESULT_URL, json=data, verify=False).json()
+            response = session.post(YESCAPTCHA_RESULT_URL, json=data, verify=False, timeout=10).json()
             if response['status'] == "ready":
                 code = response['solution']['text']
                 logger.info(f'[√] 成功获取验证码结果: {code}')
@@ -77,7 +77,7 @@ def get_yescaptcha_result(task_id):
             else:
                 logger.info(f'[√] 等待验证码识别结果...')
                 time.sleep(3)
-        except Exception as e:
+        except requests.RequestException as e:
             logger.error(f'[x] 获取验证码识别结果失败: {e}')
     
     logger.error('[x] 获取验证码结果超时')
@@ -87,7 +87,6 @@ def IsValidExpression(expression):
     pattern = r'^[A-Za-z0-9\+\-\*/]{6}$'
     return bool(re.match(pattern, expression))
 
-# 登录函数，只在12小时或首次执行时调用
 def login(USERNAME, PASSWORD):
     puzzid = GetPuzzleID()
     current_time = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='milliseconds').replace("+00:00", "Z")
@@ -112,12 +111,12 @@ def login(USERNAME, PASSWORD):
         login_data = json.dumps(data)
         logger.info(f'[2] 登录数据： {login_data}')
         try:
-            r = session.post(LoginURL, login_data, headers=headers, verify=False).json()
+            r = session.post(LoginURL, login_data, headers=headers, verify=False, timeout=10).json()
             logger.debug(r)
             token = r['data']['token']
             logger.success(f'[√] 成功获取AuthToken {token}')
             return token
-        except Exception as e:
+        except requests.RequestException as e:
             logger.error(f'[x] 登录失败，错误信息: {e}')
             return None
     return None
@@ -131,13 +130,19 @@ def KeepAlive(USERNAME, TOKEN):
     }
     json_data = json.dumps(data)
     headers['authorization'] = "Bearer " + str(TOKEN)
-    r = session.post(KeepAliveURL, data=json_data, headers=headers, verify=False).json()
-    logger.info(f'[3] 保持链接中... {r}')
+    try:
+        r = session.post(KeepAliveURL, data=json_data, headers=headers, verify=False, timeout=10).json()
+        logger.info(f'[3] 保持链接中... {r}')
+    except requests.RequestException as e:
+        logger.error(f'[x] 保持链接失败: {e}')
 
 def GetPoint(TOKEN):
     headers['authorization'] = "Bearer " + str(TOKEN)
-    r = session.get(GetPointURL, headers=headers, verify=False).json()
-    logger.success(f'[√] 成功获取Point {r}')
+    try:
+        r = session.get(GetPointURL, headers=headers, verify=False, timeout=10).json()
+        logger.success(f'[√] 成功获取Point {r}')
+    except requests.RequestException as e:
+        logger.error(f'[x] 获取Point失败: {e}')
 
 def main(USERNAME, PASSWORD):
     TOKEN = ''
@@ -150,13 +155,11 @@ def main(USERNAME, PASSWORD):
 
     while True:
         try:
-            # 如果距离上次登录超过12小时，重新登录
             if time.time() - last_login_time >= login_interval:
                 logger.debug(f'[√] 重新登录获取Token...')
                 TOKEN = login(USERNAME, PASSWORD)
                 last_login_time = time.time()  # 记录登录时间
 
-            # 执行保持活动和获取点数的操作
             KeepAlive(USERNAME, TOKEN)
             GetPoint(TOKEN)
 
