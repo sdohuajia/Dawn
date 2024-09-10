@@ -41,13 +41,8 @@ def GetPuzzleID():
 
 # 使用 YesCaptcha API 识别验证码
 def RemixCaptchaWithYesCaptcha(base64_image):
-    # YesCaptcha API 网址
     YESCAPTCHA_API_URL = "https://api.yescaptcha.com/createTask"
-
-    # 替换成你的 YesCaptcha API Key
     API_KEY = "YOUR_YESCAPTCHA_API_KEY"
-
-    # YesCaptcha 请求数据
     data = {
         "clientKey": API_KEY,
         "task": {
@@ -56,7 +51,6 @@ def RemixCaptchaWithYesCaptcha(base64_image):
         }
     }
 
-    # 发送请求并获取任务ID
     try:
         response = session.post(YESCAPTCHA_API_URL, json=data, verify=False).json()
         if response.get("taskId"):
@@ -72,16 +66,12 @@ def RemixCaptchaWithYesCaptcha(base64_image):
 
 # 获取验证码识别结果
 def get_yescaptcha_result(task_id):
-    # YesCaptcha 获取结果 API 网址
     YESCAPTCHA_RESULT_URL = "https://api.yescaptcha.com/getTaskResult"
-    
-    # 查询 YesCaptcha 结果
     data = {
         "clientKey": "YOUR_YESCAPTCHA_API_KEY",
         "taskId": task_id
     }
 
-    # 轮询任务状态，最多尝试 10 次
     for _ in range(10):
         try:
             response = session.post(YESCAPTCHA_RESULT_URL, json=data, verify=False).json()
@@ -91,7 +81,7 @@ def get_yescaptcha_result(task_id):
                 return code
             else:
                 logger.info(f'[√] 等待验证码识别结果...')
-                time.sleep(3)  # 等待 3 秒后再次查询
+                time.sleep(3)
         except Exception as e:
             logger.error(f'[x] 获取验证码识别结果失败: {e}')
     
@@ -101,9 +91,7 @@ def get_yescaptcha_result(task_id):
 # 检查验证码算式
 def IsValidExpression(expression):
     pattern = r'^[A-Za-z0-9\+\-\*/]{6}$'
-    if re.match(pattern, expression):
-        return True
-    return False
+    return bool(re.match(pattern, expression))
 
 # 登录函数
 def login(USERNAME, PASSWORD):
@@ -120,7 +108,6 @@ def login(USERNAME, PASSWORD):
         "ans": "0"
     }
 
-    # 验证码识别部分
     refresh_image = session.get(f'https://www.aeropres.in/chromeapi/dawn/v1/puzzle/get-puzzle-image?puzzle_id={puzzid}', headers=headers, verify=False).json()
     base64_image = refresh_image['imgBase64']
     code = RemixCaptchaWithYesCaptcha(base64_image)
@@ -163,29 +150,30 @@ def GetPoint(TOKEN):
 # 主函数
 def main(USERNAME, PASSWORD):
     TOKEN = ''
+    last_login_time = None
+    login_interval = 12 * 3600  # 12小时（以秒为单位）
+
     if TOKEN == '':
         while True:
             TOKEN = login(USERNAME, PASSWORD)
+            last_login_time = time.time()  # 记录首次登录时间
             if TOKEN:
                 break
-    # 初始化计数器
-    count = 0
-    max_count = 200  # 每运行 200 次重新获取 TOKEN
+
     while True:
         try:
+            # 如果距离上次登录超过12小时，重新登录
+            if time.time() - last_login_time >= login_interval:
+                logger.debug(f'[√] 重新登录获取Token...')
+                TOKEN = login(USERNAME, PASSWORD)
+                last_login_time = time.time()  # 记录登录时间
+
             # 执行保持活动和获取点数的操作
             KeepAlive(USERNAME, TOKEN)
             GetPoint(TOKEN)
-            # 更新计数器
-            count += 1
-            # 每达到 max_count 次后重新获取 TOKEN
-            if count >= max_count:
-                logger.debug(f'[√] 重新登录获取Token...')
-                while True:
-                    TOKEN = login(USERNAME, PASSWORD)
-                    if TOKEN:
-                        break
-                count = 0  # 重置计数器
+
+            time.sleep(300)  # 每5分钟保持一次会话
+
         except Exception as e:
             logger.error(e)
 
