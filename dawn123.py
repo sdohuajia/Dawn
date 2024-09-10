@@ -17,10 +17,8 @@ GetPointURL = "https://www.aeropres.in/api/atom/v1/userreferral/getpoint"
 LoginURL = "https://www.aeropres.in/chromeapi/dawn/v1/user/login/v2"
 PuzzleID = "https://www.aeropres.in/chromeapi/dawn/v1/puzzle/get-puzzle"
 
-# 创建一个请求会话
 session = requests.Session()
 
-# 设置通用请求头
 headers = {
     "Content-Type": "application/json",
     "Origin": "chrome-extension://fpdkjdnhkakefebpekbdhillbhonfjjp",
@@ -33,13 +31,11 @@ headers = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36"
 }
 
-# 获取验证码 PuzzleID
 def GetPuzzleID():
     r = session.get(PuzzleID, headers=headers, verify=False).json()
     puzzid = r['puzzle_id']
     return puzzid
 
-# 使用 YesCaptcha API 识别验证码
 def RemixCaptchaWithYesCaptcha(base64_image):
     YESCAPTCHA_API_URL = "https://api.yescaptcha.com/createTask"
     API_KEY = "YOUR_YESCAPTCHA_API_KEY"
@@ -64,7 +60,6 @@ def RemixCaptchaWithYesCaptcha(base64_image):
         logger.error(f'[x] YesCaptcha 请求失败: {e}')
         return None
 
-# 获取验证码识别结果
 def get_yescaptcha_result(task_id):
     YESCAPTCHA_RESULT_URL = "https://api.yescaptcha.com/getTaskResult"
     data = {
@@ -88,12 +83,11 @@ def get_yescaptcha_result(task_id):
     logger.error('[x] 获取验证码结果超时')
     return None
 
-# 检查验证码算式
 def IsValidExpression(expression):
     pattern = r'^[A-Za-z0-9\+\-\*/]{6}$'
     return bool(re.match(pattern, expression))
 
-# 登录函数
+# 登录函数，只在12小时或首次执行时调用
 def login(USERNAME, PASSWORD):
     puzzid = GetPuzzleID()
     current_time = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='milliseconds').replace("+00:00", "Z")
@@ -128,7 +122,6 @@ def login(USERNAME, PASSWORD):
             return None
     return None
 
-# 保持会话
 def KeepAlive(USERNAME, TOKEN):
     data = {
         "username": USERNAME,
@@ -141,24 +134,19 @@ def KeepAlive(USERNAME, TOKEN):
     r = session.post(KeepAliveURL, data=json_data, headers=headers, verify=False).json()
     logger.info(f'[3] 保持链接中... {r}')
 
-# 获取积分
 def GetPoint(TOKEN):
     headers['authorization'] = "Bearer " + str(TOKEN)
     r = session.get(GetPointURL, headers=headers, verify=False).json()
     logger.success(f'[√] 成功获取Point {r}')
 
-# 主函数
 def main(USERNAME, PASSWORD):
     TOKEN = ''
     last_login_time = None
     login_interval = 12 * 3600  # 12小时（以秒为单位）
 
     if TOKEN == '':
-        while True:
-            TOKEN = login(USERNAME, PASSWORD)
-            last_login_time = time.time()  # 记录首次登录时间
-            if TOKEN:
-                break
+        TOKEN = login(USERNAME, PASSWORD)
+        last_login_time = time.time()  # 记录首次登录时间
 
     while True:
         try:
