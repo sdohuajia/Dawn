@@ -1,7 +1,6 @@
 import ast
 import json
 import re
-
 import requests
 import random
 import time
@@ -35,16 +34,15 @@ headers = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36"
 }
 
-
 def GetPuzzleID():
-    r = session.get(PuzzleID, headers=headers,verify=False).json()
+    r = session.get(PuzzleID, headers=headers, verify=False).json()
     puzzid = r['puzzle_id']
     return puzzid
 
 # 检查验证码算式
 def IsValidExpression(expression):
-    # 检查表达式是否为6位的字母和数字组合
-    pattern = r'^[A-Za-z0-9]{6}$'
+    # 更新正则表达式，允许字母、数字和常见的数学符号
+    pattern = r'^[A-Za-z0-9\+\-\*/]{6}$'
     if re.match(pattern, expression):
         return True
     return False
@@ -55,8 +53,8 @@ def RemixCaptacha(base64_image):
     image_data = base64.b64decode(base64_image)
     # 使用BytesIO将二进制数据转换为一个可读的文件对象
     image = Image.open(BytesIO(image_data))
-    #####################################
-    # 将图像转换为 RGB 模式（如果不是的话）
+
+    # 将图像转换为 RGB 模式
     image = image.convert('RGB')
     # 创建一个新的图像（白色背景）
     new_image = Image.new('RGB', image.size, 'white')
@@ -72,19 +70,18 @@ def RemixCaptacha(base64_image):
             else:
                 new_image.putpixel((x, y), (255, 255, 255))  # 替换为白色
 
-    ##################
-
     # 创建OCR对象
     ocr = ddddocr.DdddOcr(show_ad=False)
-    ocr.set_ranges(0)
+    ocr.set_ranges(0)  # 设置OCR识别范围，包含更多符号
     result = ocr.classification(new_image)
-    logger.debug(f'[1] 验证码识别结果：{result}，是否为可计算验证码 {IsValidExpression(result)}',)
-    if IsValidExpression(result) == True:
-        #rc = eval(result)
+    logger.debug(f'[1] 验证码识别结果：{result}，是否为可计算验证码 {IsValidExpression(result)}')
+
+    if IsValidExpression(result):
         return result
+    return None
 
-
-def login(USERNAME,PASSWORD):
+# 登录函数
+def login(USERNAME, PASSWORD):
     puzzid = GetPuzzleID()
     current_time = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='milliseconds').replace("+00:00", "Z")
     data = {
@@ -94,45 +91,55 @@ def login(USERNAME,PASSWORD):
             "_v": "1.0.7",
             "datetime": current_time
         },
-        "puzzle_id":puzzid ,
+        "puzzle_id": puzzid,
         "ans": "0"
     }
+
     # 验证码识别部分
-    refresh_image = session.get(f'https://www.aeropres.in/chromeapi/dawn/v1/puzzle/get-puzzle-image?puzzle_id={puzzid}',headers=headers,verify=False).json()
+    refresh_image = session.get(f'https://www.aeropres.in/chromeapi/dawn/v1/puzzle/get-puzzle-image?puzzle_id={puzzid}', headers=headers, verify=False).json()
     code = RemixCaptacha(refresh_image['imgBase64'])
-    if code :
-        logger.success(f'[√] 成功获取验证码结果 {code}',)
+    
+    if code:
+        logger.success(f'[√] 成功获取验证码结果 {code}')
         data['ans'] = str(code)
         login_data = json.dumps(data)
         logger.info(f'[2] 登录数据： {login_data}')
         try:
-            r = session.post(LoginURL,login_data,headers=headers,verify=False).json()
+            r = session.post(LoginURL, login_data, headers=headers, verify=False).json()
             logger.debug(r)
             token = r['data']['token']
             logger.success(f'[√] 成功获取AuthToken {token}')
             return token
         except Exception as e:
-            logger.error(f'[x] 验证码错误，尝试重新获取...')
+            logger.error(f'[x] 登录失败，错误信息: {e}')
+            return None
+    return None
 
-def KeepAlive(USERNAME,TOKEN):
-    data = {"username": USERNAME,"extensionid":"fpdkjdnhkakefebpekbdhillbhonfjjp","numberoftabs":0,"_v":"1.0.7"}
+# 保持会话
+def KeepAlive(USERNAME, TOKEN):
+    data = {
+        "username": USERNAME,
+        "extensionid": "fpdkjdnhkakefebpekbdhillbhonfjjp",
+        "numberoftabs": 0,
+        "_v": "1.0.7"
+    }
     json_data = json.dumps(data)
-    headers['authorization'] = "Berear " + str(TOKEN)
-    r = session.post(KeepAliveURL,data=json_data,headers=headers,verify=False).json()
+    headers['authorization'] = "Bearer " + str(TOKEN)
+    r = session.post(KeepAliveURL, data=json_data, headers=headers, verify=False).json()
     logger.info(f'[3] 保持链接中... {r}')
 
-
+# 获取积分
 def GetPoint(TOKEN):
-    headers['authorization'] = "Berear " + str(TOKEN)
-    r = session.get(GetPointURL,headers=headers,verify=False).json()
+    headers['authorization'] = "Bearer " + str(TOKEN)
+    r = session.get(GetPointURL, headers=headers, verify=False).json()
     logger.success(f'[√] 成功获取Point {r}')
 
-
-def main(USERANEM, PASSWORD):
+# 主函数
+def main(USERNAME, PASSWORD):
     TOKEN = ''
     if TOKEN == '':
         while True:
-            TOKEN = login(USERANEM, PASSWORD)
+            TOKEN = login(USERNAME, PASSWORD)
             if TOKEN:
                 break
     # 初始化计数器
@@ -141,7 +148,7 @@ def main(USERANEM, PASSWORD):
     while True:
         try:
             # 执行保持活动和获取点数的操作
-            KeepAlive(USERANEM, TOKEN)
+            KeepAlive(USERNAME, TOKEN)
             GetPoint(TOKEN)
             # 更新计数器
             count += 1
@@ -149,17 +156,14 @@ def main(USERANEM, PASSWORD):
             if count >= max_count:
                 logger.debug(f'[√] 重新登录获取Token...')
                 while True:
-                    TOKEN = login(USERANEM, PASSWORD)
+                    TOKEN = login(USERNAME, PASSWORD)
                     if TOKEN:
                         break
                 count = 0  # 重置计数器
         except Exception as e:
             logger.error(e)
 
-
-
 if __name__ == '__main__':
-    with open('password.txt','r') as f:
-        username,password = f.readline().strip().split(':')
-    main(username,password)
-
+    with open('password.txt', 'r') as f:
+        username, password = f.readline().strip().split(':')
+    main(username, password)
