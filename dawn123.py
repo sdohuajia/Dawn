@@ -130,19 +130,41 @@ def KeepAlive(USERNAME, TOKEN):
     }
     json_data = json.dumps(data)
     headers['authorization'] = "Bearer " + str(TOKEN)
-    try:
-        r = session.post(KeepAliveURL, data=json_data, headers=headers, verify=False, timeout=10).json()
-        logger.info(f'[3] 保持链接中... {r}')
-    except requests.RequestException as e:
-        logger.error(f'[x] 保持链接失败: {e}')
+    retry_attempts = 3
+
+    for attempt in range(retry_attempts):
+        try:
+            r = session.post(KeepAliveURL, data=json_data, headers=headers, verify=False, timeout=10).json()
+            if r.get('success') == True:
+                logger.info(f'[3] 保持链接中... {r}')
+                break
+            else:
+                logger.error(f'[x] 保持链接失败: {r}')
+        except requests.RequestException as e:
+            logger.error(f'[x] 保持链接失败: {e}')
+            if attempt < retry_attempts - 1:
+                time.sleep(5)  # 重试间隔
+            else:
+                logger.error('[x] 达到最大重试次数，停止重试')
 
 def GetPoint(TOKEN):
     headers['authorization'] = "Bearer " + str(TOKEN)
-    try:
-        r = session.get(GetPointURL, headers=headers, verify=False, timeout=10).json()
-        logger.success(f'[√] 成功获取Point {r}')
-    except requests.RequestException as e:
-        logger.error(f'[x] 获取Point失败: {e}')
+    retry_attempts = 3
+
+    for attempt in range(retry_attempts):
+        try:
+            r = session.get(GetPointURL, headers=headers, verify=False, timeout=10).json()
+            if r.get('success') == True:
+                logger.success(f'[√] 成功获取Point {r}')
+                break
+            else:
+                logger.error(f'[x] 获取Point失败: {r}')
+        except requests.RequestException as e:
+            logger.error(f'[x] 获取Point失败: {e}')
+            if attempt < retry_attempts - 1:
+                time.sleep(5)  # 重试间隔
+            else:
+                logger.error('[x] 达到最大重试次数，停止重试')
 
 def main(USERNAME, PASSWORD):
     TOKEN = ''
