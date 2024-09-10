@@ -9,13 +9,13 @@ import urllib3
 from PIL import Image
 import base64
 from io import BytesIO
-import ddddocr
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 from loguru import logger
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 KeepAliveURL = "https://www.aeropres.in/chromeapi/dawn/v1/userreward/keepalive"
 GetPointURL = "https://www.aeropres.in/api/atom/v1/userreferral/getpoint"
-LoginURL = "https://www.aeropres.in//chromeapi/dawn/v1/user/login/v2"
+LoginURL = "https://www.aeropres.in/chromeapi/dawn/v1/user/login/v2"
 PuzzleID = "https://www.aeropres.in/chromeapi/dawn/v1/puzzle/get-puzzle"
 
 # 创建一个请求会话
@@ -34,54 +34,41 @@ headers = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36"
 }
 
+# 获取验证码图片的 puzzle_id
 def GetPuzzleID():
     r = session.get(PuzzleID, headers=headers, verify=False).json()
     puzzid = r['puzzle_id']
     return puzzid
 
-# 检查验证码算式
-def IsValidExpression(expression):
-    # 更新正则表达式，允许字母、数字和常见的数学符号
-    pattern = r'^[A-Za-z0-9\+\-\*/]{6}$'
-    if re.match(pattern, expression):
-        return True
-    return False
+# 使用 YesCaptcha 进行验证码识别
+def GetCaptchaFromYesCaptcha(base64_image):
+    api_url = 'https://api.yescaptcha.com/solve'
+    api_key = '你的 YesCaptcha API Key'  # 替换为你的 API Key
+    payload = {
+        'clientKey': api_key,
+        'task': {
+            'type': 'ImageToTextTask',
+            'body': base64_image
+        }
+    }
 
-# 验证码识别
-def RemixCaptacha(base64_image):
-    # 将Base64字符串解码为二进制数据
-    image_data = base64.b64decode(base64_image)
-    # 使用BytesIO将二进制数据转换为一个可读的文件对象
-    image = Image.open(BytesIO(image_data))
+    try:
+        response = requests.post(api_url, json=payload)
+        result = response.json()
 
-    # 将图像转换为 RGB 模式
-    image = image.convert('RGB')
-    # 创建一个新的图像（白色背景）
-    new_image = Image.new('RGB', image.size, 'white')
-    # 获取图像的宽度和高度
-    width, height = image.size
-    # 遍历所有像素
-    for x in range(width):
-        for y in range(height):
-            pixel = image.getpixel((x, y))
-            # 如果像素是黑色，则保留；否则设为白色
-            if pixel == (48, 48, 48):  # 黑色像素
-                new_image.putpixel((x, y), pixel)  # 保留原始黑色
-            else:
-                new_image.putpixel((x, y), (255, 255, 255))  # 替换为白色
+        if result.get('errorId') == 0:
+            captcha_text = result.get('solution', {}).get('text')
+            logger.success(f'[√] 成功通过 YesCaptcha 获取验证码：{captcha_text}')
+            return captcha_text
+        else:
+            logger.error(f'[x] YesCaptcha 识别失败: {result.get("errorDescription")}')
+            return None
+    except Exception as e:
+        logger.error(f'[x] 请求 YesCaptcha 出错: {e}')
+        return None
 
-    # 创建OCR对象
-    ocr = ddddocr.DdddOcr(show_ad=False)
-    ocr.set_ranges(0)  # 设置OCR识别范围，包含更多符号
-    result = ocr.classification(new_image)
-    logger.debug(f'[1] 验证码识别结果：{result}，是否为可计算验证码 {IsValidExpression(result)}')
-
-    if IsValidExpression(result):
-        return result
-    return None
-
-# 登录函数
-def login(USERNAME, PASSWORD):
+# 登录流程
+def login(USERNAME, PASSWORD, last_captcha_time):
     puzzid = GetPuzzleID()
     current_time = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='milliseconds').replace("+00:00", "Z")
     data = {
@@ -95,53 +82,52 @@ def login(USERNAME, PASSWORD):
         "ans": "0"
     }
 
-    # 验证码识别部分
-    refresh_image = session.get(f'https://www.aeropres.in/chromeapi/dawn/v1/puzzle/get-puzzle-image?puzzle_id={puzzid}', headers=headers, verify=False).json()
-    code = RemixCaptacha(refresh_image['imgBase64'])
-    
-    if code:
-        logger.success(f'[√] 成功获取验证码结果 {code}')
-        data['ans'] = str(code)
-        login_data = json.dumps(data)
-        logger.info(f'[2] 登录数据： {login_data}')
-        try:
-            r = session.post(LoginURL, login_data, headers=headers, verify=False).json()
-            logger.debug(r)
-            token = r['data']['token']
-            logger.success(f'[√] 成功获取AuthToken {token}')
-            return token
-        except Exception as e:
-            logger.error(f'[x] 登录失败，错误信息: {e}')
-            return None
-    return None
+    # 判断是否需要重新获取验证码（每4小时获取一次）
+    now = time.time()
+    if now - last_captcha_time > 4 * 3600:  # 4 小时 = 4 * 3600 秒
+        refresh_image = session.get(f'https://www.aeropres.in/chromeapi/dawn/v1/puzzle/get-puzzle-image?puzzle_id={puzzid}', headers=headers, verify=False).json()
+        code = GetCaptchaFromYesCaptcha(refresh_image['imgBase64'])
+        if code:
+            data['ans'] = str(code)
+            last_captcha_time = now  # 更新最后一次获取验证码的时间
 
-# 保持会话
+    login_data = json.dumps(data)
+    logger.info(f'[2] 登录数据： {login_data}')
+    
+    try:
+        r = session.post(LoginURL, login_data, headers=headers, verify=False).json()
+        logger.debug(r)
+        token = r['data']['token']
+        logger.success(f'[√] 成功获取AuthToken {token}')
+        return token, last_captcha_time
+    except Exception as e:
+        logger.error(f'[x] 验证码错误，尝试重新获取...')
+        return None, last_captcha_time
+
+# 保持活动状态
 def KeepAlive(USERNAME, TOKEN):
-    data = {
-        "username": USERNAME,
-        "extensionid": "fpdkjdnhkakefebpekbdhillbhonfjjp",
-        "numberoftabs": 0,
-        "_v": "1.0.7"
-    }
+    data = {"username": USERNAME, "extensionid": "fpdkjdnhkakefebpekbdhillbhonfjjp", "numberoftabs": 0, "_v": "1.0.7"}
     json_data = json.dumps(data)
     headers['authorization'] = "Bearer " + str(TOKEN)
     r = session.post(KeepAliveURL, data=json_data, headers=headers, verify=False).json()
     logger.info(f'[3] 保持链接中... {r}')
 
-# 获取积分
+# 获取点数
 def GetPoint(TOKEN):
     headers['authorization'] = "Bearer " + str(TOKEN)
     r = session.get(GetPointURL, headers=headers, verify=False).json()
     logger.success(f'[√] 成功获取Point {r}')
 
-# 主函数
+# 主循环
 def main(USERNAME, PASSWORD):
     TOKEN = ''
+    last_captcha_time = 0  # 上次获取验证码的时间初始化为 0
     if TOKEN == '':
         while True:
-            TOKEN = login(USERNAME, PASSWORD)
+            TOKEN, last_captcha_time = login(USERNAME, PASSWORD, last_captcha_time)
             if TOKEN:
                 break
+    
     # 初始化计数器
     count = 0
     max_count = 200  # 每运行 200 次重新获取 TOKEN
@@ -156,7 +142,7 @@ def main(USERNAME, PASSWORD):
             if count >= max_count:
                 logger.debug(f'[√] 重新登录获取Token...')
                 while True:
-                    TOKEN = login(USERNAME, PASSWORD)
+                    TOKEN, last_captcha_time = login(USERNAME, PASSWORD, last_captcha_time)
                     if TOKEN:
                         break
                 count = 0  # 重置计数器
