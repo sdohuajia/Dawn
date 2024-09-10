@@ -10,8 +10,11 @@ from PIL import Image
 import base64
 from io import BytesIO
 import ddddocr
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 from loguru import logger
+import sys
+import os
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 KeepAliveURL = "https://www.aeropres.in/chromeapi/dawn/v1/userreward/keepalive"
 GetPointURL = "https://www.aeropres.in/api/atom/v1/userreferral/getpoint"
@@ -105,11 +108,17 @@ def login(USERNAME, PASSWORD):
         login_data = json.dumps(data)
         logger.info(f'[2] 登录数据： {login_data}')
         try:
-            r = session.post(LoginURL, login_data, headers=headers, verify=False).json()
+            r = session.post(LoginURL, data=login_data, headers=headers, verify=False).json()
             logger.debug(r)
             token = r['data']['token']
             logger.success(f'[√] 成功获取AuthToken {token}')
             return token
+        except json.JSONDecodeError as e:
+            logger.error(f'[x] 登录失败，JSON解码错误，错误信息: {e}')
+            logger.info('[√] 正在重启脚本...')
+            time.sleep(5)  # 等待几秒钟，然后重启脚本
+            python = sys.executable
+            os.execl(python, python, *sys.argv)
         except Exception as e:
             logger.error(f'[x] 登录失败，错误信息: {e}')
             return None
@@ -160,8 +169,18 @@ def main(USERNAME, PASSWORD):
                     if TOKEN:
                         break
                 count = 0  # 重置计数器
+        except json.JSONDecodeError as e:
+            logger.error(f'[x] JSON解码错误，错误信息: {e}')
+            logger.info('[√] 正在重启脚本...')
+            time.sleep(5)  # 等待几秒钟，然后重启脚本
+            python = sys.executable
+            os.execl(python, python, *sys.argv)
         except Exception as e:
             logger.error(e)
+            # 添加错误处理代码以重启脚本（视需求而定）
+            time.sleep(5)  # 等待几秒钟，然后重启脚本
+            python = sys.executable
+            os.execl(python, python, *sys.argv)
 
 if __name__ == '__main__':
     with open('password.txt', 'r') as f:
