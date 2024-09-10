@@ -74,7 +74,7 @@ function install_and_start_dawn() {
 
     echo "$DAWNUSERNAME:$DAWNPASSWORD" > password.txt
 
-    wget -O dawn.py https://raw.githubusercontent.com/sdohuajia/Dawn/main/dawn123.py
+    wget -O dawn.py https://raw.githubusercontent.com/sdohuajia/Dawn/main/dawn.py
 
     # 启动 Dawn
     pm2 start python3 --name dawn -- dawn.py
