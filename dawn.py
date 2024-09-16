@@ -21,9 +21,13 @@ def get_fast_captcha_api_key():
         return file.read().strip()
 
 def GetPuzzleID():
-    r = requests.get(PuzzleID).json()
-    puzzid = r['puzzle_id']
-    return puzzid
+    try:
+        r = requests.get(PuzzleID, verify=False).json()
+        puzzid = r['puzzle_id']
+        return puzzid
+    except requests.exceptions.RequestException as e:
+        logger.error(f"获取 Puzzle ID 失败: {e}")
+        return None
 
 def IsValidExpression(expression):
     # 检查表达式是否为6位的字母和数字组合
@@ -36,9 +40,13 @@ def solve_captcha(api_key, website_url, website_key):
         'Content-Type': 'application/x-www-form-urlencoded'
     }
     payload = f'webUrl={website_url}&websiteKey={website_key}'
-    response = requests.post(FastCaptchaURL, headers=headers, data=payload)
-    response.raise_for_status()
-    return response.json().get('solution')
+    try:
+        response = requests.post(FastCaptchaURL, headers=headers, data=payload, verify=False)
+        response.raise_for_status()
+        return response.json().get('solution')
+    except requests.exceptions.RequestException as e:
+        logger.error(f"解决验证码失败: {e}")
+        return None
 
 def RemixCaptacha(base64_image):
     # 将Base64字符串解码为二进制数据
@@ -67,6 +75,10 @@ def RemixCaptacha(base64_image):
 
 def login(USERNAME, PASSWORD):
     puzzid = GetPuzzleID()
+    if not puzzid:
+        logger.error("获取 Puzzle ID 失败，登录终止")
+        return False
+
     current_time = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='milliseconds').replace("+00:00", "Z")
     data = {
         "username": USERNAME,
@@ -78,49 +90,59 @@ def login(USERNAME, PASSWORD):
         "puzzle_id": puzzid,
         "ans": "0"
     }
-    refresh_image = requests.get(f'https://www.aeropres.in/chromeapi/dawn/v1/puzzle/refresh-image/{puzzid}').json()
-    base64_image = refresh_image['image']
-    captcha_solution = RemixCaptacha(base64_image)
-    logger.debug(f'[2] 识别结果: {captcha_solution}')
-    data['ans'] = captcha_solution
-    
-    headers = {
-        "Content-Type": "application/json"
-    }
-    response = requests.post(LoginURL, json=data, headers=headers)
-    logger.debug(f'[3] 登录请求返回: {response.text}')
-    if response.status_code == 200:
-        result = response.json()
-        if result['result'] == 'success':
-            logger.info('登录成功')
-            return True
+    try:
+        refresh_image = requests.get(f'https://www.aeropres.in/chromeapi/dawn/v1/puzzle/refresh-image/{puzzid}', verify=False).json()
+        base64_image = refresh_image['image']
+        captcha_solution = RemixCaptacha(base64_image)
+        logger.debug(f'[2] 识别结果: {captcha_solution}')
+        data['ans'] = captcha_solution
+        
+        headers = {
+            "Content-Type": "application/json"
+        }
+        response = requests.post(LoginURL, json=data, headers=headers, verify=False)
+        logger.debug(f'[3] 登录请求返回: {response.text}')
+        if response.status_code == 200:
+            result = response.json()
+            if result['result'] == 'success':
+                logger.info('登录成功')
+                return True
+            else:
+                logger.error(f'登录失败: {result.get("msg")}')
+                return False
         else:
-            logger.error(f'登录失败: {result.get("msg")}')
+            logger.error(f'请求失败: {response.status_code}')
             return False
-    else:
-        logger.error(f'请求失败: {response.status_code}')
+    except requests.exceptions.RequestException as e:
+        logger.error(f"登录请求失败: {e}")
         return False
 
 def keep_alive():
     headers = {
         "Content-Type": "application/json"
     }
-    response = requests.post(KeepAliveURL, headers=headers)
-    if response.status_code == 200:
-        logger.info('保持在线请求成功')
-    else:
-        logger.error(f'保持在线请求失败: {response.status_code}')
+    try:
+        response = requests.post(KeepAliveURL, headers=headers, verify=False)
+        if response.status_code == 200:
+            logger.info('保持在线请求成功')
+        else:
+            logger.error(f'保持在线请求失败: {response.status_code}')
+    except requests.exceptions.RequestException as e:
+        logger.error(f"保持在线请求失败: {e}")
 
 def get_point():
     headers = {
         "Content-Type": "application/json"
     }
-    response = requests.get(GetPointURL, headers=headers)
-    if response.status_code == 200:
-        result = response.json()
-        logger.info(f'获取积分成功: {result}')
-    else:
-        logger.error(f'获取积分失败: {response.status_code}')
+    try:
+        response = requests.get(GetPointURL, headers=headers, verify=False)
+        if response.status_code == 200:
+            result = response.json()
+            logger.info(f'获取积分成功: {result}')
+        else:
+            logger.error(f'获取积分失败: {response.status_code}')
+    except requests.exceptions.RequestException as e:
+        logger.error(f"获取积分失败: {e}")
 
 if __name__ == "__main__":
     USERNAME = "your_username"  # 替换为实际用户名
