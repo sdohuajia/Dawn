@@ -54,31 +54,6 @@ function install_python_packages() {
     pip3 install pillow ddddocr requests loguru
 }
 
-# 解决验证码的函数
-function solve_captcha() {
-    echo "请输入网站 URL:"
-    read -r WEBSITE_URL
-    echo "请输入网站密钥:"
-    read -r WEBSITE_KEY
-    echo "请输入 Fast Captcha API 密钥:"
-    read -r API_KEY
-
-    local FAST_CAPTCHA_URL="https://thedataextractors.com/fast-captcha/api/solve/recaptcha"
-    local PAYLOAD="webUrl=${WEBSITE_URL}&websiteKey=${WEBSITE_KEY}"
-    local HEADERS="apiSecretKey: ${API_KEY}"
-
-    echo "正在请求 Fast Captcha 解决验证码..."
-    RESPONSE=$(curl -s -X POST "$FAST_CAPTCHA_URL" -H "apiSecretKey: ${API_KEY}" -H "Content-Type: application/x-www-form-urlencoded" -d "$PAYLOAD")
-    
-    SOLUTION=$(echo "$RESPONSE" | jq -r '.solution')
-    
-    if [ "$SOLUTION" != "null" ]; then
-        echo "验证码解决方案: $SOLUTION"
-    else
-        echo "无法解决验证码，请检查输入的 API 密钥和其他参数。"
-    fi
-}
-
 # 安装并启动 Dawn 的函数
 function install_and_start_dawn() {
     # 更新和安装必要的软件
@@ -100,17 +75,8 @@ function install_and_start_dawn() {
     echo "$DAWNUSERNAME:$DAWNPASSWORD" > password.txt
 
     # 获取 Fast Captcha API 信息
-    echo "请输入网站 URL:"
-    read -r WEBSITE_URL
-    echo "请输入网站密钥:"
-    read -r WEBSITE_KEY
-    echo "请输入 Fast Captcha API 密钥:"
-    read -r API_KEY
-
-    # 保存 Fast Captcha 信息到文件
-    echo "$WEBSITE_URL" > website_url.txt
-    echo "$WEBSITE_KEY" > website_key.txt
-    echo "$API_KEY" > fast_captcha_api_key.txt
+    read -r -p "请输入 Fast Captcha API 密钥: " FAST_CAPTCHA_API_KEY
+    echo "$FAST_CAPTCHA_API_KEY" > fast_captcha_api_key.txt
 
     wget -O dawn.py https://raw.githubusercontent.com/sdohuajia/Dawn/main/dawn.py
 
