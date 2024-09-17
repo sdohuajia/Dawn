@@ -21,10 +21,13 @@ def get_fast_captcha_api_key():
         return file.read().strip()
 
 def GetPuzzleID():
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
     try:
-        r = requests.get(PuzzleID, verify=False)
+        r = requests.get(PuzzleID, headers=headers, verify=False)
         if r.status_code == 200:
-            logger.debug(f"Puzzle ID 响应内容: {r.text}")  # 添加调试日志，显示响应内容
+            logger.debug(f"Puzzle ID 响应内容: {r.text}")
             return r.json().get('puzzle_id')
         else:
             logger.error(f"获取 Puzzle ID 请求失败，状态码: {r.status_code}")
@@ -34,7 +37,7 @@ def GetPuzzleID():
         return None
     except json.JSONDecodeError as e:
         logger.error(f"解析 Puzzle ID JSON 失败: {e}")
-        logger.debug(f"响应内容: {r.text}")  # 添加调试日志，显示返回内容
+        logger.debug(f"响应内容: {r.text}")
         return None
 
 def IsValidExpression(expression):
