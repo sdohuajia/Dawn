@@ -22,11 +22,19 @@ def get_fast_captcha_api_key():
 
 def GetPuzzleID():
     try:
-        r = requests.get(PuzzleID, verify=False).json()
-        puzzid = r['puzzle_id']
-        return puzzid
+        r = requests.get(PuzzleID, verify=False)
+        if r.status_code == 200:
+            logger.debug(f"Puzzle ID 响应内容: {r.text}")  # 添加调试日志，显示响应内容
+            return r.json().get('puzzle_id')
+        else:
+            logger.error(f"获取 Puzzle ID 请求失败，状态码: {r.status_code}")
+            return None
     except requests.exceptions.RequestException as e:
         logger.error(f"获取 Puzzle ID 失败: {e}")
+        return None
+    except json.JSONDecodeError as e:
+        logger.error(f"解析 Puzzle ID JSON 失败: {e}")
+        logger.debug(f"响应内容: {r.text}")  # 添加调试日志，显示返回内容
         return None
 
 def IsValidExpression(expression):
@@ -84,7 +92,7 @@ def login(USERNAME, PASSWORD):
         "username": USERNAME,
         "password": PASSWORD,
         "logindata": {
-            "_v": "1.0.7",
+            "_v": "1.0.8",
             "datetime": current_time
         },
         "puzzle_id": puzzid,
