@@ -4,6 +4,10 @@
 SCRIPT_PATH="$HOME/Dawn.sh"
 DAWN_DIR="$HOME/Dawn"
 
+# 安装 python3.10-venv
+sudo apt update
+sudo apt install -y python3.10-venv  # 添加此行以安装 python3.10-venv
+
 # 检查是否以 root 用户运行脚本
 if [ "$(id -u)" != "0" ]; then
     echo "此脚本需要以 root 用户权限运行。"
