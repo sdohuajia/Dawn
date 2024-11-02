@@ -103,8 +103,8 @@ echo "正在安装所需的 Python 包..."
 cd Dawn
 pip install -r requirements.txt
 
-# 提示用户输入 2captcha API key
-read -p "请输入您的 2captcha API 密钥: " two_captcha_api_key
+# 提示用户输入 anti-captcha API key
+read -p "请输入您的 anti-captcha API 密钥: " anti_captcha_api_key
 
 # 设置配置文件路径
 config_file="/root/Dawn/config/settings.yaml"
@@ -115,9 +115,9 @@ if [ ! -f "$config_file" ]; then
     exit 1
 fi
 
-# 替换 settings.yaml 中的 2captcha API key
-echo "正在更新 settings.yaml 中的 2captcha API 密钥..."
-sed -i "s/two_captcha_api_key: \".*\"/two_captcha_api_key: \"$two_captcha_api_key\"/" "$config_file"
+# 替换 settings.yaml 中的 anti-captcha API key
+echo "正在更新 settings.yaml 中的 anti-captcha API 密钥..."
+sed -i "s/anti_captcha_api_key: \".*\"/anti_captcha_api_key: \"$anti_captcha_api_key\"/" "$config_file"
 
 # 提示用户输入邮件和密码
 read -p "请输入您的邮箱和密码，格式为 email:password: " email_password
