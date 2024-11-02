@@ -235,7 +235,6 @@ function main_menu() {
         echo "退出脚本，请按键盘 ctrl + C 退出即可"
         echo "请选择要执行的操作:"
         echo "1. 安装部署Dawn"
-        echo "2. 安装部署Grass"
         echo "3. 退出"
 
         read -p "请输入您的选择 (1，2，3): " choice
