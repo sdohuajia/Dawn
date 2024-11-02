@@ -43,8 +43,8 @@ function install_python() {
     sudo apt install -y software-properties-common
     sudo add-apt-repository ppa:deadsnakes/ppa -y
     sudo apt update
-    sudo apt install -y python3.11 python3.11-venv python3.11-dev
-    echo "Python 3.11 安装完成。"
+    sudo apt install -y python3.11 python3.11-venv python3.11-dev python3-pip  # 添加 python3-pip
+    echo "Python 3.11 和 pip 安装完成。"
 }
 
 # 安装和配置函数
