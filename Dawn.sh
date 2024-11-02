@@ -61,8 +61,14 @@ function install_and_configure() {
     echo "正在从 GitHub 克隆仓库..."
     git clone https://github.com/sdohuajia/Dawn.git
 
+    # 检查克隆操作是否成功
+    if [ ! -d "$DAWN_DIR" ]; then
+        echo "克隆失败，请检查网络连接或仓库地址。"
+        exit 1
+    fi
+
     # 进入仓库目录
-    cd Dawn
+    cd "$DAWN_DIR" || { echo "无法进入 Dawn 目录"; exit 1; }
 
     # 创建虚拟环境
     echo "正在创建虚拟环境..."
@@ -70,17 +76,24 @@ function install_and_configure() {
 
     # 激活虚拟环境
     echo "正在激活虚拟环境..."
-    source venv/bin/activate
+    source "$DAWN_DIR/venv/bin/activate"
+
+    # 返回到 Dawn 主目录（当前已经在此目录下）
+    echo "已激活虚拟环境，返回到 Dawn 主目录..."
 
     # 安装依赖
     echo "正在安装所需的 Python 包..."
+    if [ ! -f requirements.txt ]; then
+        echo "未找到 requirements.txt 文件，无法安装依赖。"
+        exit 1
+    fi
     pip install -r requirements.txt
 
     # 提示用户输入 anti-captcha API key
     read -p "请输入您的 anti-captcha API 密钥: " anti_captcha_api_key
 
     # 设置配置文件路径
-    config_file="/root/Dawn/config/settings.yaml"
+    config_file="$DAWN_DIR/config/settings.yaml"
 
     # 检查配置文件是否存在
     if [ ! -f "$config_file" ]; then
@@ -96,7 +109,7 @@ function install_and_configure() {
     read -p "请输入您的邮箱和密码，格式为 email:password: " email_password
 
     # 设置 farm.txt 文件路径
-    farm_file="/root/Dawn/config/data/farm.txt"
+    farm_file="$DAWN_DIR/config/data/farm.txt"
 
     # 检查 farm.txt 文件是否存在
     if [ ! -f "$farm_file" ]; then
@@ -111,7 +124,7 @@ function install_and_configure() {
     read -p "请输入您的代理信息，格式为 http://user:pass@ip:port: " proxy_info
 
     # 设置 proxies.txt 文件路径
-    proxies_file="/root/Dawn/config/data/proxies.txt"
+    proxies_file="$DAWN_DIR/config/data/proxies.txt"
 
     # 检查 proxies.txt 文件是否存在
     if [ ! -f "$proxies_file" ]; then
