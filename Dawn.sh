@@ -93,7 +93,7 @@ python3 -m venv venv
 
 # 激活虚拟环境
 echo "正在激活虚拟环境..."
-source venv/bin/activate
+source activate
 
 # 返回到原始目录
 cd ../..
