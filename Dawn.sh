@@ -13,7 +13,7 @@ fi
 # 检查 Python 版本
 function check_python_version() {
     if command -v python3 &>/dev/null; then
-        python_version=$(python3 --version | awk '{print \$2}')
+        python_version=$(python3 --version | awk '{print \$2}')  # 这里不需要反斜杠
         echo "当前 Python 版本: $python_version"
         
         # 检查版本是否大于或等于 3.11
@@ -115,4 +115,44 @@ function install_and_configure() {
     echo "$proxy_info" >> "$proxies_file"
 
     echo "代理信息已添加到 $proxies_file."
-    echo "安装、克隆、虚拟环境
+    echo "安装、克隆、虚拟环境设置和配置已完成！"
+
+    # 运行 Python 脚本
+    echo "正在运行脚本 python3 run.py..."
+    python3 run.py
+}
+
+# 主菜单函数
+function main_menu() {
+    while true; do
+        clear
+        echo "脚本由大赌社区哈哈哈哈编写，推特 @ferdie_jhovie，免费开源，请勿相信收费"
+        echo "如有问题，可联系推特，仅此只有一个号"
+        echo "================================================================"
+        echo "退出脚本，请按键盘 ctrl + C 退出即可"
+        echo "请选择要执行的操作:"
+        echo "1. 运行安装和配置"
+        echo "2. 退出"
+
+        read -p "请输入您的选择 (1/2): " choice
+        case $choice in
+            1)
+                install_and_configure  # 调用安装和配置函数
+                ;;
+            2)
+                echo "退出脚本..."
+                exit 0
+                ;;
+            *)
+                echo "无效的选择，请重试."
+                read -n 1 -s -r -p "按任意键继续..."
+                ;;
+        esac
+    done
+}
+
+# 检查 Python 版本
+check_python_version
+
+# 进入主菜单
+main_menu
