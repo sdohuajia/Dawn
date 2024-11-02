@@ -146,6 +146,9 @@ function install_and_configure() {
     echo "正在运行脚本 python3 run.py..."
     cd /root/Dawn
     python3 run.py
+
+    # 提示用户按任意键继续
+    read -n 1 -s -r -p "按任意键继续进行下一步..."
 }
 
 # 主菜单函数
