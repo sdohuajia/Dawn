@@ -39,121 +39,80 @@ function install_python() {
     echo "Python 3.11 安装完成。"
 }
 
-# 主菜单函数
-function main_menu() {
-    while true; do
-        clear
-        echo "脚本由大赌社区哈哈哈哈编写，推特 @ferdie_jhovie，免费开源，请勿相信收费"
-        echo "如有问题，可联系推特，仅此只有一个号"
-        echo "================================================================"
-        echo "退出脚本，请按键盘 ctrl + C 退出即可"
-        echo "请选择要执行的操作:"
-        echo "1. 运行 dawn"
-        echo "2. 退出"
+# 安装和配置函数
+function install_and_configure() {
+    # 更新包列表
+    echo "正在更新软件包列表..."
+    sudo apt update
 
-        read -p "请输入您的选择 (1/2): " choice
-        case $choice in
-            1)
-                echo "正在运行 run.py..."
-                python3 run.py
-                ;;
-            2)
-                echo "退出脚本..."
-                exit 0
-                ;;
-            *)
-                echo "无效的选择，请重试."
-                read -n 1 -s -r -p "按任意键继续..."
-                ;;
-        esac
-    done
-}
+    # 安装 git（如果尚未安装）
+    echo "正在安装 git..."
+    sudo apt install -y git
 
-# 检查 Python 版本
-check_python_version
+    # 克隆 GitHub 仓库
+    echo "正在从 GitHub 克隆仓库..."
+    git clone https://github.com/sdohuajia/Dawn.git
 
-# 更新包列表
-echo "正在更新软件包列表..."
-sudo apt update
+    # 进入仓库目录
+    cd Dawn
 
-# 安装 git（如果尚未安装）
-echo "正在安装 git..."
-sudo apt install -y git
+    # 创建虚拟环境
+    echo "正在创建虚拟环境..."
+    python3 -m venv venv
 
-# 克隆 GitHub 仓库
-echo "正在从 GitHub 克隆仓库..."
-git clone https://github.com/sdohuajia/Dawn.git
+    # 激活虚拟环境
+    echo "正在激活虚拟环境..."
+    source venv/bin/activate
 
-# 进入仓库目录
-cd Dawn
+    # 安装依赖
+    echo "正在安装所需的 Python 包..."
+    pip install -r requirements.txt
 
-# 创建虚拟环境
-echo "正在创建虚拟环境..."
-python3 -m venv venv
+    # 提示用户输入 anti-captcha API key
+    read -p "请输入您的 anti-captcha API 密钥: " anti_captcha_api_key
 
-# 激活虚拟环境
-echo "正在激活虚拟环境..."
-source activate
+    # 设置配置文件路径
+    config_file="/root/Dawn/config/settings.yaml"
 
-# 返回到原始目录
-cd ../..
+    # 检查配置文件是否存在
+    if [ ! -f "$config_file" ]; then
+        echo "配置文件 $config_file 不存在."
+        exit 1
+    fi
 
-# 安装依赖
-echo "正在安装所需的 Python 包..."
-cd Dawn
-pip install -r requirements.txt
+    # 替换 settings.yaml 中的 anti-captcha API key
+    echo "正在更新 settings.yaml 中的 anti-captcha API 密钥..."
+    sed -i "s/anti_captcha_api_key: \".*\"/anti_captcha_api_key: \"$anti_captcha_api_key\"/" "$config_file"
 
-# 提示用户输入 anti-captcha API key
-read -p "请输入您的 anti-captcha API 密钥: " anti_captcha_api_key
+    # 提示用户输入邮件和密码
+    read -p "请输入您的邮箱和密码，格式为 email:password: " email_password
 
-# 设置配置文件路径
-config_file="/root/Dawn/config/settings.yaml"
+    # 设置 farm.txt 文件路径
+    farm_file="/root/Dawn/config/data/farm.txt"
 
-# 检查配置文件是否存在
-if [ ! -f "$config_file" ]; then
-    echo "配置文件 $config_file 不存在."
-    exit 1
-fi
+    # 检查 farm.txt 文件是否存在
+    if [ ! -f "$farm_file" ]; then
+        echo "正在创建 farm.txt 文件，路径为 $farm_file."
+        touch "$farm_file"
+    fi
 
-# 替换 settings.yaml 中的 anti-captcha API key
-echo "正在更新 settings.yaml 中的 anti-captcha API 密钥..."
-sed -i "s/anti_captcha_api_key: \".*\"/anti_captcha_api_key: \"$anti_captcha_api_key\"/" "$config_file"
+    # 将用户输入写入 farm.txt
+    echo "$email_password" >> "$farm_file"
 
-# 提示用户输入邮件和密码
-read -p "请输入您的邮箱和密码，格式为 email:password: " email_password
+    # 提示用户输入代理信息
+    read -p "请输入您的代理信息，格式为 http://user:pass@ip:port: " proxy_info
 
-# 设置 farm.txt 文件路径
-farm_file="/root/Dawn/config/data/farm.txt"
+    # 设置 proxies.txt 文件路径
+    proxies_file="/root/Dawn/config/data/proxies.txt"
 
-# 检查 farm.txt 文件是否存在
-if [ ! -f "$farm_file" ]; then
-    echo "正在创建 farm.txt 文件，路径为 $farm_file."
-    touch "$farm_file"
-fi
+    # 检查 proxies.txt 文件是否存在
+    if [ ! -f "$proxies_file" ]; then
+        echo "正在创建 proxies.txt 文件，路径为 $proxies_file."
+        touch "$proxies_file"
+    fi
 
-# 将用户输入写入 farm.txt
-echo "$email_password" >> "$farm_file"
+    # 将用户输入写入 proxies.txt
+    echo "$proxy_info" >> "$proxies_file"
 
-# 提示用户输入代理信息
-read -p "请输入您的代理信息，格式为 http://user:pass@ip:port: " proxy_info
-
-# 设置 proxies.txt 文件路径
-proxies_file="/root/Dawn/config/data/proxies.txt"
-
-# 检查 proxies.txt 文件是否存在
-if [ ! -f "$proxies_file" ]; then
-    echo "正在创建 proxies.txt 文件，路径为 $proxies_file."
-    touch "$proxies_file"
-fi
-
-# 将用户输入写入 proxies.txt
-echo "$proxy_info" >> "$proxies_file"
-
-echo "代理信息已添加到 $proxies_file."
-echo "安装、克隆、虚拟环境设置和配置已完成！"
-
-# 提示用户按任意键继续
-read -n 1 -s -r -p "按任意键继续以进入主菜单..."
-
-# 进入主菜单
-main_menu
+    echo "代理信息已添加到 $proxies_file."
+    echo "安装、克隆、虚拟环境
