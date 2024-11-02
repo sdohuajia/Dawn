@@ -1,4 +1,3 @@
 # Dawn
 
-wget -O Blockmesh.sh https://raw.githubusercontent.com/sdohuajia/Blockmesh/refs/heads/main/Blockmesh.sh && sed -i 's/\r$//' Blockmesh.sh && chmod +x Blockmesh.sh && ./Blockmesh.sh
-
+wget -O Dawn.sh https://raw.githubusercontent.com/sdohuajia/Dawn/refs/heads/main/Dawn.sh && sed -i 's/\r$//' Dawn.sh && chmod +x Dawn.sh && ./Dawn.sh
