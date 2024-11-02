@@ -9,7 +9,7 @@ referral_code: "e1ta0p"        # Your referral code for the application
 
 # Captcha Settings
 # ---------------
-captcha_module: 2captcha       # Captcha service to use: '2captcha' or 'anticaptcha'
+captcha_module: anticaptcha       # Captcha service to use: '2captcha' or 'anticaptcha'
 two_captcha_api_key: ""        # API key for 2captcha service
 anti_captcha_api_key: ""       # API key for anti-captcha service
 
