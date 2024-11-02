@@ -117,8 +117,8 @@ function install_and_configure() {
         touch "$farm_file"
     fi
 
-    # 将用户输入写入 farm.txt
-    echo "$email_password" >> "$farm_file"
+    # 将用户输入写入 farm.txt 的第一行
+    { echo "$email_password"; cat "$farm_file"; } > "$farm_file.tmp" && mv "$farm_file.tmp" "$farm_file"
 
     # 提示用户输入代理信息
     read -p "请输入您的代理信息，格式为 http://user:pass@ip:port: " proxy_info
@@ -132,8 +132,8 @@ function install_and_configure() {
         touch "$proxies_file"
     fi
 
-    # 将用户输入写入 proxies.txt
-    echo "$proxy_info" >> "$proxies_file"
+    # 将用户输入写入 proxies.txt 的第一行
+    { echo "$proxy_info"; cat "$proxies_file"; } > "$proxies_file.tmp" && mv "$proxies_file.tmp" "$proxies_file"
 
     echo "代理信息已添加到 $proxies_file."
     echo "安装、克隆、虚拟环境设置和配置已完成！"
