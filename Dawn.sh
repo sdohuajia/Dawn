@@ -140,6 +140,7 @@ function install_and_configure() {
 
     # 运行 Python 脚本
     echo "正在运行脚本 python3 run.py..."
+    cd "$DAWN_DIR"
     python3 run.py
 }
 
