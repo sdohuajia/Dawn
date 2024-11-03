@@ -100,6 +100,13 @@ function install_and_configure() {
 
 # 安装和配置 Grassnode 函数
 function setup_grassnode() {
+    # 检查 grass 目录是否存在，如果存在则删除
+    if [ -d "grass" ]; then
+        echo "检测到 grass 目录已存在，正在删除..."
+        rm -rf grass
+        echo "Dawn 目录已删除。"
+    fi
+    
     echo "正在从 GitHub 克隆 grass 仓库..."
     git clone https://github.com/sdohuajia/grass.git
     if [ ! -d "/root/grass" ]; then
