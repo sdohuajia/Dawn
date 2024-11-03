@@ -14,10 +14,8 @@ opencv_contrib_python==4.10.0.84
 opencv_python==4.10.0.84
 opencv_python_headless==4.10.0.84
 paddleocr==2.9.1
-paddleocr.egg==info
 pydantic==2.9.2
 pytz==2024.2
-PyYAML==6.0.2
 PyYAML==6.0.2
 rich==13.9.4
 tortoise==0.1.1
