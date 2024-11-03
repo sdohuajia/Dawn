@@ -51,7 +51,7 @@ function install_and_configure() {
     
     # 克隆 GitHub 仓库
     echo "正在从 GitHub 克隆仓库..."
-    git clone https://github.com/sdohuajia/Dawn.git
+    git clone https://github.com/wyq000/The-Dawn-Bot1.git
 
     # 检查克隆操作是否成功
     if [ ! -d "$DAWN_DIR" ]; then
