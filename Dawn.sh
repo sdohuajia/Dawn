@@ -154,28 +154,17 @@ function install_and_configure() {
 # 安装和配置函数
 function setup_grassnode() {
     # 克隆 GitHub 仓库
-    echo "正在从 GitHub 克隆 GrassNode 仓库..."
+    echo "正在从 GitHub 克隆 grass 仓库..."
     git clone https://github.com/sdohuajia/grass.git
 
     # 检查克隆操作是否成功
-    if [ ! -d "/root/GrassNode" ]; then  # 修改为正确的目录
+    if [ ! -d "/root/grass" ]; then  # 修改为正确的目录
         echo "克隆失败，请检查网络连接或仓库地址。"
         exit 1
     fi
 
     # 进入仓库目录
-    cd "/root/GrassNode" || { echo "无法进入 GrassNode 目录"; exit 1; }
-
-    # 创建虚拟环境
-    echo "正在创建虚拟环境..."
-    python3 -m venv venv
-
-    # 激活虚拟环境
-    echo "正在激活虚拟环境..."
-    source "venv/bin/activate"  # 修改为相对路径
-
-    # 返回到 GrassNode 主目录（当前已经在此目录下）
-    echo "已激活虚拟环境，返回到 GrassNode 主目录..."
+    cd "/root/grass" || { echo "无法进入 grass 目录"; exit 1; }
 
     # 安装依赖
     echo "正在安装所需的 Python 包..."
@@ -183,46 +172,44 @@ function setup_grassnode() {
         echo "未找到 requirements.txt 文件，无法安装依赖。"
         exit 1
     fi
-    pip install -r requirements.txt
+    python3 -m pip install -r requirements.txt
 
     # 提示用户输入代理信息
     read -p "请输入您的代理信息，格式为 http://用户名:密码@ip地址:端口: " proxy_info
 
     # 设置 proxy.txt 文件路径
-    proxy_file="/root/GrassNode/proxy.txt"
+    proxy_file="/root/grass/proxies.txt"
 
     # 检查 proxy.txt 文件是否存在
     if [ ! -f "$proxy_file" ]; then
-        echo "正在创建 proxy.txt 文件，路径为 $proxy_file."
-        touch "$proxy_file"
+    echo "正在创建 proxy.txt 文件，路径为 $proxy_file."
+    touch "$proxy_file"
     fi
 
-    # 将用户输入写入 proxy.txt 的第一行
-    { echo "$proxy_info"; cat "$proxy_file"; } > "$proxy_file.tmp" && mv "$proxy_file.tmp" "$proxy_file"
+    # 删除空行并将用户输入写入 proxy.txt 的第一行
+    {
+    echo "$proxy_info"
+    # 使用 grep 删除空行
+    grep -v '^$' "$proxy_file"
+    } > "$proxy_file.tmp" && mv "$proxy_file.tmp" "$proxy_file"
 
     echo "代理信息已添加到 $proxy_file."
-
-    # 提示用户输入 _user_id
-    read -p "请输入您的 _user_id: " user_id
-
-    # 设置 main.py 文件路径
-    main_file="/root/GrassNode/main.py"
-
-    # 检查 main.py 文件是否存在
-    if [ ! -f "$main_file" ]; then
-        echo "未找到 main.py 文件，无法更新 _user_id。"
-        exit 1
+    
+    # 运行 setup.py
+    if [ -f setup.py ]; then
+        echo "正在运行 setup.py..."
+        python3 setup.py
+    else
+        echo "未找到 setup.py 文件，跳过此步骤。"
     fi
 
-    # 替换 main.py 中的 _user_id
-    sed -i "s/_user_id = 'Replace Your User ID HERE'/_user_id = '$user_id'/" "$main_file"
+    # 使用 screen 启动 main.py
+    echo "正在使用 screen 启动 main.py..."
+    screen -S Grass -dm python3 main.py
 
-    echo "_user_id 已更新为 '$user_id' 在 $main_file."
-
-    # 运行 Python 脚本
-    echo "正在运行脚本 python3 run.py..."
-    cd /root/GrassNode
-    python3 run.py
+    # 提示用户查看日志
+    echo "使用 'screen -r Grass' 命令来查看日志。"
+    echo "要退出 screen 会话，请按 Ctrl+A 然后按 D。"
 }
 
 # 主菜单函数
