@@ -93,7 +93,7 @@ function install_and_configure() {
     # 使用 tmux 创建一个新的会话并在其中运行 Python 脚本
     tmux new-session -d -s dawn  # 创建新的 tmux 会话
     tmux send-keys -t dawn "cd $DAWN_DIR" C-m  # 切换到 Dawn 目录
-    tmux send-keys -t dawn "source venv/bin/activate" C-m  # 激活虚拟环境
+    tmux send-keys -t dawn "source \"$DAWN_DIR/venv/bin/activate\"" C-m  # 激活虚拟环境
     tmux send-keys -t dawn "python3.10 run.py" C-m  # 运行 Python 脚本
     tmux attach-session -t dawn  # 连接到会话
 
