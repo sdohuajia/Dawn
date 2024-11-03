@@ -43,11 +43,10 @@ function install_and_configure() {
         echo "Dawn 目录已删除。"
     fi
 
-    # 更新包列表并安装 git
-    echo "正在更新软件包列表和安装 git..."
+    # 更新包列表并安装 git 和 tmux
+    echo "正在更新软件包列表和安装 git 和 tmux..."
     sudo apt update
-    sudo apt install -y git
-    sudo apt install screen
+    sudo apt install -y git tmux
     
     # 克隆 GitHub 仓库
     echo "正在从 GitHub 克隆仓库..."
@@ -91,14 +90,18 @@ function install_and_configure() {
     echo "安装、克隆、虚拟环境设置和配置已完成！"
     echo "正在运行脚本 python3.10 run.py..."
     
-    # 使用 screen 创建一个新的会话并在其中运行 Python 脚本
-    screen -S dawn python3 main.py
-    echo "使用 'screen -r dawn' 命令来查看日志。"
-    echo "要退出 screen 会话，请按 Ctrl+A 然后按 D。"
+    # 使用 tmux 创建一个新的会话并在其中运行 Python 脚本
+    tmux new-session -d -s dawn  # 创建新的 tmux 会话
+    tmux send-keys -t dawn "cd $DAWN_DIR" C-m  # 切换到 Dawn 目录
+    tmux send-keys -t dawn "source venv/bin/activate" C-m  # 激活虚拟环境
+    tmux send-keys -t dawn "python3.10 run.py" C-m  # 运行 Python 脚本
+    tmux attach-session -t dawn  # 连接到会话
+
+    echo "使用 'tmux attach-session -t dawn' 命令来查看日志。"
+    echo "要退出 tmux 会话，请按 Ctrl+B 然后按 D。"
 
     # 提示用户按任意键返回主菜单
     read -n 1 -s -r -p "按任意键返回主菜单..."
-
 }
 
 # 安装和配置 Grassnode 函数
