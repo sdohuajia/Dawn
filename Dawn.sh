@@ -115,10 +115,18 @@ function setup_grassnode() {
     fi
     python3.11 -m pip install -r requirements.txt
 
-    read -p "请输入您的代理信息，格式为 http://用户名:密码@ip地址:端口: " proxy_info
-    proxy_file="/root/grass/proxies.txt"
-    [ ! -f "$proxy_file" ] && touch "$proxy_file"
-    { echo "$proxy_info"; grep -v '^' "$proxy_file"; } > "$proxy_file.tmp" && mv "$proxy_file.tmp" "$proxy_file"
+    # 配置代理信息
+    read -p "请输入您的代理信息，格式为 http://user:pass@ip:port: " proxy_info
+    proxies_file="$DAWN_DIR/config/data/proxies.txt"
+
+    # 检查 proxies.txt 文件是否存在
+    [ ! -f "$proxies_file" ] && touch "$proxies_file"
+
+    # 删除空行并将用户输入写入 proxies.txt 的第一行
+    {
+    echo "$proxy_info"
+    grep -v '^$' "$proxies_file"  # 删除原文件中的空行
+    } > "$proxies_file.tmp" && mv "$proxies_file.tmp" "$proxies_file"
 
     echo "代理信息已添加到 $proxy_file."
     
