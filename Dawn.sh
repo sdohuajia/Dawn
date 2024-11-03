@@ -4,10 +4,6 @@
 SCRIPT_PATH="$HOME/Dawn.sh"
 DAWN_DIR="$HOME/Dawn"
 
-# 安装 python3.10-venv
-sudo apt update
-sudo apt install -y python3.10-venv  # 添加此行以安装 python3.10-venv
-
 # 检查是否以 root 用户运行脚本
 if [ "$(id -u)" != "0" ]; then
     echo "此脚本需要以 root 用户权限运行。"
@@ -15,28 +11,12 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
-# 检查 Dawn 目录是否存在，如果存在则删除
-if [ -d "$DAWN_DIR" ]; then
-    echo "检测到 Dawn 目录已存在，正在删除..."
-    rm -rf "$DAWN_DIR"
-    echo "Dawn 目录已删除。"
-fi
-
-# 检查 Python 版本
-function check_python_version() {
-    if command -v python3 &>/dev/null; then
-        python_version=$(python3 --version | awk '{print \$2}')  # 这里不需要反斜杠
-        echo "当前 Python 版本: $python_version"
-        
-        # 检查版本是否大于或等于 3.11
-        if [[ $(echo "$python_version < 3.11" | bc) -eq 1 ]]; then
-            echo "Python 版本低于 3.11，正在安装最新版本..."
-            install_python
-        else
-            echo "Python 版本符合要求。"
-        fi
+# 检查 Python 3.11 是否已安装
+function check_python_installed() {
+    if command -v python3.11 &>/dev/null; then
+        echo "Python 3.11 已安装。"
     else
-        echo "未安装 Python，正在安装最新版本..."
+        echo "未安装 Python 3.11，正在安装..."
         install_python
     fi
 }
@@ -47,18 +27,22 @@ function install_python() {
     sudo apt install -y software-properties-common
     sudo add-apt-repository ppa:deadsnakes/ppa -y
     sudo apt update
-    sudo apt install -y python3.11 python3.11-venv python3.11-dev python3-pip  # 添加 python3-pip
+    sudo apt install -y python3.11 python3.11-venv python3.11-dev python3-pip
     echo "Python 3.11 和 pip 安装完成。"
 }
 
 # 安装和配置函数
 function install_and_configure() {
-    # 更新包列表
-    echo "正在更新软件包列表..."
-    sudo apt update
+    # 检查 Dawn 目录是否存在，如果存在则删除
+    if [ -d "$DAWN_DIR" ]; then
+        echo "检测到 Dawn 目录已存在，正在删除..."
+        rm -rf "$DAWN_DIR"
+        echo "Dawn 目录已删除。"
+    fi
 
-    # 安装 git（如果尚未安装）
-    echo "正在安装 git..."
+    # 更新包列表并安装 git
+    echo "正在更新软件包列表和安装 git..."
+    sudo apt update
     sudo apt install -y git
 
     # 克隆 GitHub 仓库
@@ -74,16 +58,10 @@ function install_and_configure() {
     # 进入仓库目录
     cd "$DAWN_DIR" || { echo "无法进入 Dawn 目录"; exit 1; }
 
-    # 创建虚拟环境
-    echo "正在创建虚拟环境..."
-    python3 -m venv venv
-
-    # 激活虚拟环境
-    echo "正在激活虚拟环境..."
+    # 创建并激活虚拟环境
+    echo "正在创建和激活虚拟环境..."
+    python3.11 -m venv venv
     source "$DAWN_DIR/venv/bin/activate"
-
-    # 返回到 Dawn 主目录（当前已经在此目录下）
-    echo "已激活虚拟环境，返回到 Dawn 主目录..."
 
     # 安装依赖
     echo "正在安装所需的 Python 包..."
@@ -92,122 +70,61 @@ function install_and_configure() {
         exit 1
     fi
     pip install -r requirements.txt
+    pip install httpx
 
-    # 提示用户输入 anti-captcha API key
+    # 配置 anti-captcha API 密钥
     read -p "请输入您的 anti-captcha API 密钥: " anti_captcha_api_key
-
-    # 设置配置文件路径
     config_file="$DAWN_DIR/config/settings.yaml"
-
-    # 检查配置文件是否存在
     if [ ! -f "$config_file" ]; then
         echo "配置文件 $config_file 不存在."
         exit 1
     fi
-
-    # 替换 settings.yaml 中的 anti-captcha API key
-    echo "正在更新 settings.yaml 中的 anti-captcha API 密钥..."
     sed -i "s/anti_captcha_api_key: \".*\"/anti_captcha_api_key: \"$anti_captcha_api_key\"/" "$config_file"
 
-    # 提示用户输入邮件和密码
+    # 配置邮件和密码
     read -p "请输入您的邮箱和密码，格式为 email:password: " email_password
-
-    # 设置 farm.txt 文件路径
     farm_file="$DAWN_DIR/config/data/farm.txt"
-
-    # 检查 farm.txt 文件是否存在
-    if [ ! -f "$farm_file" ]; then
-        echo "正在创建 farm.txt 文件，路径为 $farm_file."
-        touch "$farm_file"
-    fi
-
-    # 将用户输入写入 farm.txt 的第一行
+    [ ! -f "$farm_file" ] && touch "$farm_file"
     { echo "$email_password"; cat "$farm_file"; } > "$farm_file.tmp" && mv "$farm_file.tmp" "$farm_file"
 
-    # 提示用户输入代理信息
+    # 配置代理信息
     read -p "请输入您的代理信息，格式为 http://user:pass@ip:port: " proxy_info
-
-    # 设置 proxies.txt 文件路径
     proxies_file="$DAWN_DIR/config/data/proxies.txt"
-
-    # 检查 proxies.txt 文件是否存在
-    if [ ! -f "$proxies_file" ]; then
-        echo "正在创建 proxies.txt 文件，路径为 $proxies_file."
-        touch "$proxies_file"
-    fi
-
-    # 将用户输入写入 proxies.txt 的第一行
+    [ ! -f "$proxies_file" ] && touch "$proxies_file"
     { echo "$proxy_info"; cat "$proxies_file"; } > "$proxies_file.tmp" && mv "$proxies_file.tmp" "$proxies_file"
 
-    echo "代理信息已添加到 $proxies_file."
     echo "安装、克隆、虚拟环境设置和配置已完成！"
-
-    # 运行 Python 脚本
-    echo "正在运行脚本 python3 run.py..."
-    cd /root/Dawn
-    python3 run.py
-
-    # 提示用户按任意键继续
-    read -n 1 -s -r -p "按任意键继续进行下一步..."
+    echo "正在运行脚本 python3.11 run.py..."
+    python3.11 run.py
 }
 
-# 安装和配置函数
+# 安装和配置 Grassnode 函数
 function setup_grassnode() {
-    # 克隆 GitHub 仓库
     echo "正在从 GitHub 克隆 grass 仓库..."
     git clone https://github.com/sdohuajia/grass.git
-
-    # 检查克隆操作是否成功
-    if [ ! -d "/root/grass" ]; then  # 修改为正确的目录
+    if [ ! -d "/root/grass" ]; then
         echo "克隆失败，请检查网络连接或仓库地址。"
         exit 1
     fi
 
-    # 进入仓库目录
     cd "/root/grass" || { echo "无法进入 grass 目录"; exit 1; }
-
-    # 安装依赖
     echo "正在安装所需的 Python 包..."
     if [ ! -f requirements.txt ]; then
         echo "未找到 requirements.txt 文件，无法安装依赖。"
         exit 1
     fi
-    python3 -m pip install -r requirements.txt
+    python3.11 -m pip install -r requirements.txt
 
-    # 提示用户输入代理信息
     read -p "请输入您的代理信息，格式为 http://用户名:密码@ip地址:端口: " proxy_info
-
-    # 设置 proxy.txt 文件路径
     proxy_file="/root/grass/proxies.txt"
-
-    # 检查 proxy.txt 文件是否存在
-    if [ ! -f "$proxy_file" ]; then
-    echo "正在创建 proxy.txt 文件，路径为 $proxy_file."
-    touch "$proxy_file"
-    fi
-
-    # 删除空行并将用户输入写入 proxy.txt 的第一行
-    {
-    echo "$proxy_info"
-    # 使用 grep 删除空行
-    grep -v '^$' "$proxy_file"
-    } > "$proxy_file.tmp" && mv "$proxy_file.tmp" "$proxy_file"
+    [ ! -f "$proxy_file" ] && touch "$proxy_file"
+    { echo "$proxy_info"; grep -v '^$' "$proxy_file"; } > "$proxy_file.tmp" && mv "$proxy_file.tmp" "$proxy_file"
 
     echo "代理信息已添加到 $proxy_file."
-    
-    # 运行 setup.py
-    if [ -f setup.py ]; then
-        echo "正在运行 setup.py..."
-        python3 setup.py
-    else
-        echo "未找到 setup.py 文件，跳过此步骤。"
-    fi
+    [ -f setup.py ] && { echo "正在运行 setup.py..."; python3.11 setup.py; }
 
-    # 使用 screen 启动 main.py
     echo "正在使用 screen 启动 main.py..."
-    screen -S Grass -dm python3 main.py
-
-    # 提示用户查看日志
+    screen -S Grass -dm python3.11 main.py
     echo "使用 'screen -r Grass' 命令来查看日志。"
     echo "要退出 screen 会话，请按 Ctrl+A 然后按 D。"
 }
@@ -222,6 +139,7 @@ function main_menu() {
         echo "退出脚本，请按键盘 ctrl + C 退出即可"
         echo "请选择要执行的操作:"
         echo "1. 安装部署Dawn"
+        echo "2. 安装部署Grass"
         echo "3. 退出"
 
         read -p "请输入您的选择 (1，2，3): " choice
@@ -230,7 +148,7 @@ function main_menu() {
                 install_and_configure  # 调用安装和配置函数
                 ;;
             2)
-                install_and_configure  # 调用安装和配置函数
+                setup_grassnode  # 调用安装和配置函数
                 ;;
             3)
                 echo "退出脚本..."
@@ -245,7 +163,7 @@ function main_menu() {
 }
 
 # 检查 Python 版本
-check_python_version
+check_python_installed
 
 # 进入主菜单
 main_menu
