@@ -42,8 +42,8 @@ class Console:
         styled_title = Text(title, style="bold cyan")
 
         version = Text("VERSION: 1.5", style="blue")
-        telegram = Text("Channel: https://t.me/JamBitPY", style="green")
-        github = Text("GitHub: https://github.com/Jaammerr", style="green")
+        twitter = Text("twitter: https://x.com/ferdie_jhovie", style="green")
+        github = Text("GitHub: https://github.com/sdohuajia", style="green")
 
         dev_panel = Panel(
             Text.assemble(styled_title, "\n", version, "\n", telegram, "\n", github),
