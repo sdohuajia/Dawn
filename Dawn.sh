@@ -118,15 +118,20 @@ function setup_grassnode() {
     read -p "请输入您的代理信息，格式为 http://用户名:密码@ip地址:端口: " proxy_info
     proxy_file="/root/grass/proxies.txt"
     [ ! -f "$proxy_file" ] && touch "$proxy_file"
-    { echo "$proxy_info"; grep -v '^$' "$proxy_file"; } > "$proxy_file.tmp" && mv "$proxy_file.tmp" "$proxy_file"
+    { echo "$proxy_info"; grep -v '^' "$proxy_file"; } > "$proxy_file.tmp" && mv "$proxy_file.tmp" "$proxy_file"
 
     echo "代理信息已添加到 $proxy_file."
+    
+    # 运行 setup.py
     [ -f setup.py ] && { echo "正在运行 setup.py..."; python3.11 setup.py; }
 
     echo "正在使用 screen 启动 main.py..."
     screen -S Grass -dm python3.11 main.py
     echo "使用 'screen -r Grass' 命令来查看日志。"
     echo "要退出 screen 会话，请按 Ctrl+A 然后按 D。"
+
+    # 提示用户按任意键返回主菜单
+    read -n 1 -s -r -p "按任意键返回主菜单..."
 }
 
 # 主菜单函数
