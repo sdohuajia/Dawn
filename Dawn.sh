@@ -47,7 +47,8 @@ function install_and_configure() {
     echo "正在更新软件包列表和安装 git..."
     sudo apt update
     sudo apt install -y git
-
+    sudo apt install screen
+    
     # 克隆 GitHub 仓库
     echo "正在从 GitHub 克隆仓库..."
     git clone https://github.com/sdohuajia/Dawn.git
