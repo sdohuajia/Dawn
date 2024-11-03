@@ -11,28 +11,31 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
-# 检查 Python 3.11 是否已安装
-function check_python_installed() {
-    if command -v python3.11 &>/dev/null; then
-        echo "Python 3.11 已安装。"
-    else
-        echo "未安装 Python 3.11，正在安装..."
-        install_python
-    fi
-}
-
-# 安装 Python 3.11
-function install_python() {
-    sudo apt update
-    sudo apt install -y software-properties-common
-    sudo add-apt-repository ppa:deadsnakes/ppa -y
-    sudo apt update
-    sudo apt install -y python3.11 python3.11-venv python3.11-dev python3-pip
-    echo "Python 3.11 和 pip 安装完成。"
-}
-
 # 安装和配置函数
 function install_and_configure() {
+    # 检查 Python 3.10 是否已安装
+    function check_python_installed() {
+        if command -v python3.10 &>/dev/null; then
+            echo "Python 3.10 已安装。"
+        else
+            echo "未安装 Python 3.10，正在安装..."
+            install_python
+        fi
+    }
+
+    # 安装 Python 3.10
+    function install_python() {
+        sudo apt update
+        sudo apt install -y software-properties-common
+        sudo add-apt-repository ppa:deadsnakes/ppa -y
+        sudo apt update
+        sudo apt install -y python3.10 python3.10-venv python3.10-dev python3-pip
+        echo "Python 3.10 和 pip 安装完成。"
+    }
+
+    # 检查 Python 版本
+    check_python_installed
+
     # 检查 Dawn 目录是否存在，如果存在则删除
     if [ -d "$DAWN_DIR" ]; then
         echo "检测到 Dawn 目录已存在，正在删除..."
@@ -60,7 +63,7 @@ function install_and_configure() {
 
     # 创建并激活虚拟环境
     echo "正在创建和激活虚拟环境..."
-    python3.11 -m venv venv
+    python3.10 -m venv venv
     source "$DAWN_DIR/venv/bin/activate"
 
     # 安装依赖
@@ -85,10 +88,10 @@ function install_and_configure() {
     { echo "$proxy_info"; cat "$proxies_file"; } > "$proxies_file.tmp" && mv "$proxies_file.tmp" "$proxies_file"
 
     echo "安装、克隆、虚拟环境设置和配置已完成！"
-    echo "正在运行脚本 python3.11 run.py..."
+    echo "正在运行脚本 python3.10 run.py..."
 
     # 使用 screen 创建一个新的会话并在其中运行 Python 脚本
-    screen -S dawn -dm python3.11 run.py
+    screen -S dawn -dm python3.10 run.py
 
     echo "使用 'screen -r dawn' 命令来查看日志。"
     echo "要退出 screen 会话，请按 Ctrl+A 然后按 D。"
