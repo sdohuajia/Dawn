@@ -47,7 +47,7 @@ function install_and_configure() {
 
     # 克隆 GitHub 仓库
     echo "正在从 GitHub 克隆仓库..."
-    git clone https://github.com/sdohuajia/Dawn.git
+    git clone https://github.com/wyq000/The-Dawn-Bot1.git
 
     # 检查克隆操作是否成功
     if [ ! -d "$DAWN_DIR" ]; then
@@ -72,15 +72,6 @@ function install_and_configure() {
     pip install -r requirements.txt
     pip install httpx
 
-    # 配置 anti-captcha API 密钥
-    read -p "请输入您的 anti-captcha API 密钥: " anti_captcha_api_key
-    config_file="$DAWN_DIR/config/settings.yaml"
-    if [ ! -f "$config_file" ]; then
-        echo "配置文件 $config_file 不存在."
-        exit 1
-    fi
-    sed -i "s/anti_captcha_api_key: \".*\"/anti_captcha_api_key: \"$anti_captcha_api_key\"/" "$config_file"
-
     # 配置邮件和密码
     read -p "请输入您的邮箱和密码，格式为 email:password: " email_password
     farm_file="$DAWN_DIR/config/data/farm.txt"
@@ -95,7 +86,15 @@ function install_and_configure() {
 
     echo "安装、克隆、虚拟环境设置和配置已完成！"
     echo "正在运行脚本 python3.11 run.py..."
-    python3.11 run.py
+
+    # 使用 screen 创建一个新的会话并在其中运行 Python 脚本
+    screen -S dawn -dm python3.11 run.py
+
+    echo "使用 'screen -r dawn' 命令来查看日志。"
+    echo "要退出 screen 会话，请按 Ctrl+A 然后按 D。"
+
+    # 提示用户按任意键返回主菜单
+    read -n 1 -s -r -p "按任意键返回主菜单..."
 }
 
 # 安装和配置 Grassnode 函数
