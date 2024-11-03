@@ -25,13 +25,14 @@ function install_and_configure() {
 
     # 安装 Python 3.10
     function install_python() {
-        sudo apt update
-        sudo apt install -y software-properties-common
-        sudo add-apt-repository ppa:deadsnakes/ppa -y
-        sudo apt update
-        sudo apt install -y python3.10 python3.10-venv python3.10-dev python3-pip
-        echo "Python 3.10 和 pip 安装完成。"
-    }
+    sudo apt update
+    sudo apt install -y software-properties-common
+    sudo add-apt-repository ppa:deadsnakes/ppa -y
+    sudo apt update
+    # 添加 python3.10-venv 的安装
+    sudo apt install -y python3.10 python3.10-venv python3.10-dev python3-pip
+    echo "Python 3.10 和 pip 安装完成。"
+}
 
     # 检查 Python 版本
     check_python_installed
@@ -46,7 +47,7 @@ function install_and_configure() {
     # 更新包列表并安装 git 和 tmux
     echo "正在更新软件包列表和安装 git 和 tmux..."
     sudo apt update
-    sudo apt install -y git tmux
+    sudo apt install -y git tmux python3.10-venv  # 在这里添加 python3.10-venv
     
     # 克隆 GitHub 仓库
     echo "正在从 GitHub 克隆仓库..."
