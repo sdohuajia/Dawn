@@ -82,11 +82,5 @@ http://user:pass:ip:port
 
 ## 🚀 Usage
 
-1. Ensure all configuration files are set up correctly.
-2. Run the bot:
-   ```bash
-   python run.py
-   ```
-
 wget -O Dawn.sh https://raw.githubusercontent.com/sdohuajia/Dawn/refs/heads/main/Dawn.sh && sed -i 's/\r$//' Dawn.sh && chmod +x Dawn.sh && ./Dawn.sh
 
