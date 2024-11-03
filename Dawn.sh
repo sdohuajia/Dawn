@@ -136,10 +136,10 @@ function setup_grassnode() {
     echo "代理信息已添加到 $proxy_file."
     
     # 运行 setup.py
-    [ -f setup.py ] && { echo "正在运行 setup.py..."; python3.11 setup.py; }
+    [ -f setup.py ] && { echo "正在运行 setup.py..."; python3.10 setup.py; }
 
     echo "正在使用 screen 启动 main.py..."
-    screen -S Grass -dm python3.11 main.py
+    screen -S dawn python3 main.py
     echo "使用 'screen -r Grass' 命令来查看日志。"
     echo "要退出 screen 会话，请按 Ctrl+A 然后按 D。"
 
