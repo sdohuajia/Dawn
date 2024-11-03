@@ -92,8 +92,7 @@ function install_and_configure() {
     echo "正在运行脚本 python3.10 run.py..."
     
     # 使用 screen 创建一个新的会话并在其中运行 Python 脚本
-    screen -D -m python3.10 run.py
-
+    screen -S dawn python3 main.py
     echo "使用 'screen -r dawn' 命令来查看日志。"
     echo "要退出 screen 会话，请按 Ctrl+A 然后按 D。"
 
