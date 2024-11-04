@@ -40,9 +40,8 @@ function install_and_configure() {
     # 更新包列表并安装 git 和 tmux
     echo "正在更新软件包列表和安装 git 和 tmux..."
     sudo apt update
-    sudo apt install -y git tmux python3.11-venv  # 在这里添加 python3.11-venv
-    sudo apt install -y libg
-    
+    sudo apt install -y git tmux python3.11-venv libgl1-mesa-glx libglib2.0-0 libsm6 libxext6 libxrender-dev
+
     # 检查 Dawn 目录是否存在，如果存在则删除	
     if [ -d "$DAWN_DIR" ];then	
     echo "检测到 Dawn 目录已存在，正在删除..."	
