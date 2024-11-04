@@ -106,6 +106,7 @@ function install_and_configure() {
     read -n 1 -s -r -p "按任意键返回主菜单..."
 }
 
+
 # 安装和配置 Grassnode 函数
 function setup_grassnode() {
     # 检查 grass 目录是否存在，如果存在则删除
@@ -171,7 +172,12 @@ function install_python() {
     sudo add-apt-repository ppa:deadsnakes/ppa -y
     sudo apt update
     # 添加 python3.10-venv 和其他必要组件的安装
-    sudo apt install -y python3.10 python3.10-venv python3.10-dev python3-pip
+    sudo apt install -y python3.10 python3.10-venv python3.10-dev
+
+    # 安装 pip
+    echo "正在安装 pip..."
+    curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
+
     echo "Python 3.10 和 pip 安装完成。"
 }
 
