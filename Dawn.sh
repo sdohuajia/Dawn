@@ -112,10 +112,49 @@ function setup_grassnode() {
     if [ -d "grass" ]; then
         echo "检测到 grass 目录已存在，正在删除..."
         rm -rf grass
-        echo "Dawn 目录已删除。"
+        echo "grass 目录已删除。"
     fi
 
     # 检查 Python 3.10 是否已安装
+    check_python_installed
+
+    echo "正在从 GitHub 克隆 grass 仓库..."
+    git clone https://github.com/sdohuajia/grass.git
+    if [ ! -d "grass" ]; then
+        echo "克隆失败，请检查网络连接或仓库地址。"
+        exit 1
+    fi
+
+    cd "grass" || { echo "无法进入 grass 目录"; exit 1; }
+    echo "正在安装所需的 Python 包..."
+    if [ ! -f requirements.txt ]; then
+        echo "未找到 requirements.txt 文件，无法安装依赖。"
+        exit 1
+    fi
+    python3.10 -m pip install -r requirements.txt
+
+    # 手动安装 httpx
+    python3.10 -m pip install httpx
+
+    # 配置代理信息
+    read -p "请输入您的代理信息，格式为 http://user:pass@ip:port: " proxy_info
+    proxies_file="proxies.txt"  # 修改为新的路径
+    [ ! -f "$proxies_file" ] && touch "$proxies_file"
+    { echo "$proxy_info"; cat "$proxies_file"; } > "$proxies_file.tmp" && mv "$proxies_file.tmp" "$proxies_file"
+
+    # 运行 setup.py
+    [ -f setup.py ] && { echo "正在运行 setup.py..."; python3.10 setup.py; }
+
+    echo "正在使用 screen 启动 main.py..."
+    screen -S grass python3 main.py
+    echo "使用 'screen -r grass' 命令来查看日志。"
+    echo "要退出 screen 会话，请按 Ctrl+A 然后按 D。"
+
+    # 提示用户按任意键返回主菜单
+    read -n 1 -s -r -p "按任意键返回主菜单..."
+}
+
+# 检查 Python 3.10 是否已安装
 function check_python_installed() {
     if command -v python3.10 &>/dev/null; then
         echo "Python 3.10 已安装。"
@@ -134,42 +173,6 @@ function install_python() {
     # 添加 python3.10-venv 和其他必要组件的安装
     sudo apt install -y python3.10 python3.10-venv python3.10-dev python3-pip
     echo "Python 3.10 和 pip 安装完成。"
-}
-
-    echo "正在从 GitHub 克隆 grass 仓库..."
-    git clone https://github.com/sdohuajia/grass.git
-    if [ ! -d "/root/grass" ]; then
-        echo "克隆失败，请检查网络连接或仓库地址。"
-        exit 1
-    fi
-
-    cd "/root/grass" || { echo "无法进入 grass 目录"; exit 1; }
-    echo "正在安装所需的 Python 包..."
-    if [ ! -f requirements.txt ]; then
-        echo "未找到 requirements.txt 文件，无法安装依赖。"
-        exit 1
-    fi
-    python3.10 -m pip install -r requirements.txt
-
-    # 手动安装 httpx
-    python3.10 -m pip install httpx
-
-    # 配置代理信息
-    read -p "请输入您的代理信息，格式为 http://user:pass@ip:port: " proxy_info
-    proxies_file="/root/grass/proxies.txt"  # 修改为新的路径
-    [ ! -f "$proxies_file" ] && touch "$proxies_file"
-    { echo "$proxy_info"; cat "$proxies_file"; } > "$proxies_file.tmp" && mv "$proxies_file.tmp" "$proxies_file"
-
-    # 运行 setup.py
-    [ -f setup.py ] && { echo "正在运行 setup.py..."; python3.10 setup.py; }
-
-    echo "正在使用 screen 启动 main.py..."
-    screen -S dawn python3 main.py
-    echo "使用 'screen -r Grass' 命令来查看日志。"
-    echo "要退出 screen 会话，请按 Ctrl+A 然后按 D。"
-
-    # 提示用户按任意键返回主菜单
-    read -n 1 -s -r -p "按任意键返回主菜单..."
 }
 
 # 主菜单函数
