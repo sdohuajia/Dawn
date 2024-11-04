@@ -115,14 +115,26 @@ function setup_grassnode() {
         echo "grass 目录已删除。"
     fi
 
+    # 检查 Python 3.10 是否已安装
+    function check_python_installed() {
+        if command -v python3.10 &>/dev/null; then
+            echo "Python 3.10 已安装。"
+        else
+            echo "未安装 Python 3.10，正在安装..."
+            install_python
+        fi
+    }
+
     # 安装 Python 3.10
     function install_python() {
     sudo apt update
     sudo apt install -y software-properties-common
     sudo add-apt-repository ppa:deadsnakes/ppa -y
     sudo apt update
-    # 添加 python3.10-venv 和其他必要组件的安装
-    sudo apt install -y python3.10 python3.10-venv python3.10-dev
+    # 添加 python3.10-venv 的安装
+    sudo apt install -y python3.10 python3.10-venv python3.10-dev python3-pip
+    echo "Python 3.10 和 pip 安装完成。"
+}
 
     # 安装 pip
     echo "正在安装 pip..."
