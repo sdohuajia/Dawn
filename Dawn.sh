@@ -13,25 +13,25 @@ fi
 
 # 安装和配置函数
 function install_and_configure() {
-    # 检查 Python 3.10 是否已安装
+    # 检查 Python 3.11 是否已安装
     function check_python_installed() {
-        if command -v python3.10 &>/dev/null; then
-            echo "Python 3.10 已安装。"
+        if command -v python3.11 &>/dev/null; then
+            echo "Python 3.11 已安装。"
         else
-            echo "未安装 Python 3.10，正在安装..."
+            echo "未安装 Python 3.11，正在安装..."
             install_python
         fi
     }
 
-    # 安装 Python 3.10
+    # 安装 Python 3.11
     function install_python() {
-        sudo apt update
-        sudo apt install -y software-properties-common
-        sudo add-apt-repository ppa:deadsnakes/ppa -y
-        sudo apt update
-        # 添加 python3.10-venv 的安装
-        sudo apt install -y python3.10 python3.10-venv python3.10-dev python3-pip
-        echo "Python 3.10 和 pip 安装完成。"
+    sudo apt update
+    sudo apt install -y software-properties-common
+    sudo add-apt-repository ppa:deadsnakes/ppa -y
+    sudo apt install -y python3.11 python3.11-venv python3.11-dev python3-pip
+    # 添加 pip 升级命令
+    python3.11 -m pip install --upgrade pip  # 升级 pip
+    echo "Python 3.11 和 pip 安装完成。"
     }
 
     # 检查 Python 版本
@@ -47,12 +47,12 @@ function install_and_configure() {
     # 更新包列表并安装 git 和 tmux
     echo "正在更新软件包列表和安装 git 和 tmux..."
     sudo apt update
-    sudo apt install -y git tmux python3.10-venv  # 在这里添加 python3.10-venv
+    sudo apt install -y git tmux python3.11-venv  # 在这里添加 python3.11-venv
     sudo apt install -y libg
     
     # 克隆 GitHub 仓库
     echo "正在从 GitHub 克隆仓库..."
-    git clone https://github.com/sdohuajia/Dawn.git
+    git clone https://github.com/sdohuajia/Dawn-py.git Dawn
 
     # 检查克隆操作是否成功
     if [ ! -d "$DAWN_DIR" ]; then
@@ -65,7 +65,7 @@ function install_and_configure() {
 
     # 创建并激活虚拟环境
     echo "正在创建和激活虚拟环境..."
-    python3.10 -m venv venv
+    python3.11 -m venv venv
     source "$DAWN_DIR/venv/bin/activate"
 
     # 安装依赖
@@ -90,13 +90,13 @@ function install_and_configure() {
     { echo "$proxy_info"; cat "$proxies_file"; } > "$proxies_file.tmp" && mv "$proxies_file.tmp" "$proxies_file"
 
     echo "安装、克隆、虚拟环境设置和配置已完成！"
-    echo "正在运行脚本 python3.10 run.py..."
+    echo "正在运行脚本 python3.11 run.py..."
     
     # 使用 tmux 创建一个新的会话并在其中运行 Python 脚本
     tmux new-session -d -s dawn  # 创建新的 tmux 会话
     tmux send-keys -t dawn "cd $DAWN_DIR" C-m  # 切换到 Dawn 目录
     tmux send-keys -t dawn "source \"$DAWN_DIR/venv/bin/activate\"" C-m  # 激活虚拟环境
-    tmux send-keys -t dawn "python3.10 run.py" C-m  # 运行 Python 脚本
+    tmux send-keys -t dawn "python3.11 run.py" C-m  # 运行 Python 脚本
     tmux attach-session -t dawn  # 连接到会话
 
     echo "使用 'tmux attach-session -t dawn' 命令来查看日志。"
@@ -115,14 +115,14 @@ function setup_grassnode() {
         echo "grass 目录已删除。"
     fi
     
-    # 安装 Python 3.10
+    # 安装 Python 3.11
     sudo apt update
     sudo apt install -y software-properties-common
     sudo add-apt-repository ppa:deadsnakes/ppa -y
     sudo apt update
-    # 添加 python3.10-venv 的安装
-    sudo apt install -y python3.10 python3.10-venv python3.10-dev python3-pip
-    echo "Python 3.10 和 pip 安装完成。"
+    # 添加 python3.11-venv 的安装
+    sudo apt install -y python3.11 python3.11-venv python3.11-dev python3-pip
+    echo "Python 3.11 和 pip 安装完成。"
 
     echo "正在从 GitHub 克隆 grass 仓库..."
     git clone https://github.com/sdohuajia/grass.git
@@ -137,10 +137,10 @@ function setup_grassnode() {
         echo "未找到 requirements.txt 文件，无法安装依赖。"
         exit 1
     fi
-    python3.10 -m pip install -r requirements.txt
+    python3.11 -m pip install -r requirements.txt
 
     # 手动安装 httpx
-    python3.10 -m pip install httpx
+    python3.11-m pip install httpx
 
     # 配置代理信息
     read -p "请输入您的代理信息，格式为 http://user:pass@ip:port: " proxy_info
@@ -149,7 +149,7 @@ function setup_grassnode() {
     { echo "$proxy_info"; cat "$proxies_file"; } > "$proxies_file.tmp" && mv "$proxies_file.tmp" "$proxies_file"
 
     # 运行 setup.py
-    [ -f setup.py ] && { echo "正在运行 setup.py..."; python3.10 setup.py; }
+    [ -f setup.py ] && { echo "正在运行 setup.py..."; python3.11 setup.py; }
 
     echo "正在使用 screen 启动 main.py..."
     screen -S grass python3 main.py
