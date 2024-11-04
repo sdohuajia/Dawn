@@ -131,11 +131,17 @@ function setup_grassnode() {
     fi
 
     cd "grass" || { echo "无法进入 grass 目录"; exit 1; }
+
+    # 创建虚拟环境
+    python3.11 -m venv venv  # 创建虚拟环境
+    source venv/bin/activate  # 激活虚拟环境
+    
     echo "正在安装所需的 Python 包..."
     if [ ! -f requirements.txt ]; then
         echo "未找到 requirements.txt 文件，无法安装依赖。"
         exit 1
     fi
+    
     python3.11 -m pip install -r requirements.txt
 
     # 手动安装 httpx
