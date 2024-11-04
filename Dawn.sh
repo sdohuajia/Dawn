@@ -135,10 +135,10 @@ function setup_grassnode() {
 
     # 配置代理信息
     read -p "请输入您的代理信息，格式为 http://user:pass@ip:port: " proxy_info
-    proxies_file="$DAWN_DIR/config/data/proxies.txt"
+    proxies_file="/root/grass/proxies.txt"  # 修改为新的路径
+    [ ! -f "$proxies_file" ] && touch "$proxies_file"
+    { echo "$proxy_info"; cat "$proxies_file"; } > "$proxies_file.tmp" && mv "$proxies_file.tmp" "$proxies_file"
 
-    echo "代理信息已添加到 $proxy_file."
-    
     # 运行 setup.py
     [ -f setup.py ] && { echo "正在运行 setup.py..."; python3.10 setup.py; }
 
