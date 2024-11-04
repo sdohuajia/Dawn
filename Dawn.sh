@@ -48,7 +48,7 @@ function install_and_configure() {
     echo "正在更新软件包列表和安装 git 和 tmux..."
     sudo apt update
     sudo apt install -y git tmux python3.10-venv  # 在这里添加 python3.10-venv
-    sudo apt instal1 -y libg11
+    sudo apt install -y libg
     
     # 克隆 GitHub 仓库
     echo "正在从 GitHub 克隆仓库..."
