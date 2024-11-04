@@ -43,6 +43,13 @@ function install_and_configure() {
     sudo apt install -y git tmux python3.11-venv  # 在这里添加 python3.11-venv
     sudo apt install -y libg
     
+    # 检查 Dawn 目录是否存在，如果存在则删除	
+    if [ -d "$DAWN_DIR" ];then	
+    echo "检测到 Dawn 目录已存在，正在删除..."	
+    rm -rf "$DAWN_DIR"	
+    echo "Dawn 目录已删除。"	
+    fi
+    
     # 克隆 GitHub 仓库
     echo "正在从 GitHub 克隆仓库..."
     git clone https://github.com/sdohuajia/Dawn-py.git Dawn
