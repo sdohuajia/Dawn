@@ -5,7 +5,7 @@
 # ------------
 threads: 10                    # Number of concurrent threads to run (minimum: 1)
 keepalive_interval: 120        # How often to send keepalive signal (in seconds)
-referral_code: "hegbhf"        # Your referral code for the application
+referral_code: "e1ta0p"        # Your referral code for the application
 
 # Captcha Settings
 # ---------------
