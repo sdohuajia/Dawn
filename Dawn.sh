@@ -25,14 +25,14 @@ function install_and_configure() {
 
     # 安装 Python 3.10
     function install_python() {
-    sudo apt update
-    sudo apt install -y software-properties-common
-    sudo add-apt-repository ppa:deadsnakes/ppa -y
-    sudo apt update
-    # 添加 python3.10-venv 的安装
-    sudo apt install -y python3.10 python3.10-venv python3.10-dev python3-pip
-    echo "Python 3.10 和 pip 安装完成。"
-}
+        sudo apt update
+        sudo apt install -y software-properties-common
+        sudo add-apt-repository ppa:deadsnakes/ppa -y
+        sudo apt update
+        # 添加 python3.10-venv 的安装
+        sudo apt install -y python3.10 python3.10-venv python3.10-dev python3-pip
+        echo "Python 3.10 和 pip 安装完成。"
+    }
 
     # 检查 Python 版本
     check_python_installed
@@ -123,13 +123,6 @@ function setup_grassnode() {
     # 添加 python3.10-venv 的安装
     sudo apt install -y python3.10 python3.10-venv python3.10-dev python3-pip
     echo "Python 3.10 和 pip 安装完成。"
-}
-
-    # 安装 pip
-    echo "正在安装 pip..."
-    sudo apt install python3-pip
-    echo $PATH
-    echo "Python 3.10 和 pip 安装完成。"
 
     echo "正在从 GitHub 克隆 grass 仓库..."
     git clone https://github.com/sdohuajia/grass.git
@@ -199,9 +192,6 @@ function main_menu() {
         esac
     done
 }
-
-# 检查 Python 版本
-check_python_installed
 
 # 进入主菜单
 main_menu
