@@ -130,7 +130,6 @@ function setup_grassnode() {
     sudo apt install python3-pip
     echo $PATH
     echo "Python 3.10 和 pip 安装完成。"
-}
 
     echo "正在从 GitHub 克隆 grass 仓库..."
     git clone https://github.com/sdohuajia/grass.git
