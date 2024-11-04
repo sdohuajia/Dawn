@@ -106,19 +106,17 @@ function install_and_configure() {
     read -n 1 -s -r -p "按任意键返回主菜单..."
 }
 
-
-# 检查 Python 3.10 是否已安装
-function check_python_installed() {
-    if command -v python3.10 &>/dev/null; then
-        echo "Python 3.10 已安装。"
-    else
-        echo "未安装 Python 3.10，正在安装..."
-        install_python
+# 安装和配置 Grassnode 函数
+function setup_grassnode() {
+    # 检查 grass 目录是否存在，如果存在则删除
+    if [ -d "grass" ]; then
+        echo "检测到 grass 目录已存在，正在删除..."
+        rm -rf grass
+        echo "grass 目录已删除。"
     fi
-}
 
-# 安装 Python 3.10
-function install_python() {
+    # 安装 Python 3.10
+    function install_python() {
     sudo apt update
     sudo apt install -y software-properties-common
     sudo add-apt-repository ppa:deadsnakes/ppa -y
@@ -128,19 +126,9 @@ function install_python() {
 
     # 安装 pip
     echo "正在安装 pip..."
-    curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
-
+    sudo apt install python3-pip
     echo "Python 3.10 和 pip 安装完成。"
 }
-
-# 安装和配置 Grassnode 函数
-function setup_grassnode() {
-    # 检查 grass 目录是否存在，如果存在则删除
-    if [ -d "grass" ]; then
-        echo "检测到 grass 目录已存在，正在删除..."
-        rm -rf grass
-        echo "grass 目录已删除。"
-    fi
 
     echo "正在从 GitHub 克隆 grass 仓库..."
     git clone https://github.com/sdohuajia/grass.git
