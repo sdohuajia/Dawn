@@ -37,13 +37,6 @@ function install_and_configure() {
     # 检查 Python 版本
     check_python_installed
 
-    # 检查 Dawn 目录是否存在，如果存在则删除
-    if [ -d "$DAWN_DIR" ]; then
-        echo "检测到 Dawn 目录已存在，正在删除..."
-        rm -rf "$DAWN_DIR"
-        echo "Dawn 目录已删除。"
-    fi
-
     # 更新包列表并安装 git 和 tmux
     echo "正在更新软件包列表和安装 git 和 tmux..."
     sudo apt update
