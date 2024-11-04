@@ -114,7 +114,28 @@ function setup_grassnode() {
         rm -rf grass
         echo "Dawn 目录已删除。"
     fi
-    
+
+    # 检查 Python 3.10 是否已安装
+function check_python_installed() {
+    if command -v python3.10 &>/dev/null; then
+        echo "Python 3.10 已安装。"
+    else
+        echo "未安装 Python 3.10，正在安装..."
+        install_python
+    fi
+}
+
+# 安装 Python 3.10
+function install_python() {
+    sudo apt update
+    sudo apt install -y software-properties-common
+    sudo add-apt-repository ppa:deadsnakes/ppa -y
+    sudo apt update
+    # 添加 python3.10-venv 和其他必要组件的安装
+    sudo apt install -y python3.10 python3.10-venv python3.10-dev python3-pip
+    echo "Python 3.10 和 pip 安装完成。"
+}
+
     echo "正在从 GitHub 克隆 grass 仓库..."
     git clone https://github.com/sdohuajia/grass.git
     if [ ! -d "/root/grass" ]; then
@@ -128,10 +149,10 @@ function setup_grassnode() {
         echo "未找到 requirements.txt 文件，无法安装依赖。"
         exit 1
     fi
-    python3.11 -m pip install -r requirements.txt
+    python3.10 -m pip install -r requirements.txt
 
     # 手动安装 httpx
-    python3.11 -m pip install httpx
+    python3.10 -m pip install httpx
 
     # 配置代理信息
     read -p "请输入您的代理信息，格式为 http://user:pass@ip:port: " proxy_info
