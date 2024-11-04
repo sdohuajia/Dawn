@@ -139,7 +139,7 @@ function setup_grassnode() {
     python3.11 -m pip install -r requirements.txt
 
     # 手动安装 httpx
-    python3.11 -m pip install httpx
+    python3.11 -m pip install httpx aiohttp
 
     # 配置代理信息
     read -p "请输入您的代理信息，格式为 http://user:pass@ip:port: " proxy_info
