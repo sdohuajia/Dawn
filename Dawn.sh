@@ -139,6 +139,7 @@ function setup_grassnode() {
     # 安装 pip
     echo "正在安装 pip..."
     sudo apt install python3-pip
+    echo $PATH
     echo "Python 3.10 和 pip 安装完成。"
 }
 
