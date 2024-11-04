@@ -1,13 +1,4 @@
-# Dawn Extension Bot [1.5]
-
-致谢 https://github.com/Jaammerr/The-Dawn-Bot
-主要是在这位大佬的基础上完成了验证码自动识别，不需要付费打码
-
-![img.png](img.png)
-
-家人们 要点赞 要关注哦
----
-
+原作者https://github.com/Jaammerr/The-Dawn-Bot
 ## 🚀 Features
 
 - ✅ Automatic account registration and login
