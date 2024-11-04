@@ -114,19 +114,8 @@ function setup_grassnode() {
         rm -rf grass
         echo "grass 目录已删除。"
     fi
-
-    # 检查 Python 3.10 是否已安装
-    function check_python_installed() {
-        if command -v python3.10 &>/dev/null; then
-            echo "Python 3.10 已安装。"
-        else
-            echo "未安装 Python 3.10，正在安装..."
-            install_python
-        fi
-    }
-
+    
     # 安装 Python 3.10
-    function install_python() {
     sudo apt update
     sudo apt install -y software-properties-common
     sudo add-apt-repository ppa:deadsnakes/ppa -y
