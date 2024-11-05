@@ -113,6 +113,19 @@ function setup_grassnode() {
         rm -rf grass
         echo "grass 目录已删除。"
     fi
+
+    # 检查 Node.js 版本
+    node_version=$(node -v 2>/dev/null)
+    if [[ $? -ne 0 || "$node_version" != v16* ]]; then
+        echo "当前 Node.js 版本为 $node_version，正在安装 Node.js 16..."
+        # 卸载旧版本 Node.js
+        sudo apt remove -y nodejs npm
+        # 安装 Node.js 16
+        curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+        sudo apt install -y nodejs
+    else
+        echo "Node.js 版本符合要求：$node_version"
+    fi
     
     # 安装 npm 环境
     sudo apt update
