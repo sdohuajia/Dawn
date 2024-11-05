@@ -129,7 +129,7 @@ function setup_grassnode() {
 
     # 配置代理信息
     read -p "请输入您的代理信息，格式为 http://user:pass@ip:port: " proxy_info
-    proxy_file="/root/teneo/proxy.txt"  # 更新文件名为 proxy.txt
+    proxy_file="/root/grass/proxy.txt"  # 更新文件路径为 /root/grass/proxy.txt
 
     # 将代理信息写入文件
     echo "$proxy_info" > "$proxy_file"
