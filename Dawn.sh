@@ -211,6 +211,9 @@ function setup_Teneonode() {
     tmux send-keys -t teneo "python3 main.py" C-m  # 启动 main.py
     echo "使用 'tmux attach-session -t teneo' 命令来查看日志。"
     echo "要退出 tmux 会话，请按 Ctrl+B 然后按 D。"
+
+    # 提示用户按任意键返回主菜单
+    read -n 1 -s -r -p "按任意键返回主菜单..."
 }
 
 # 主菜单函数
