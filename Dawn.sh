@@ -80,14 +80,18 @@ function install_and_configure() {
     # 配置邮件和密码
     read -p "请输入您的邮箱和密码，格式为 email:password: " email_password
     farm_file="$DAWN_DIR/config/data/farm.txt"
-    [ ! -f "$farm_file" ] && touch "$farm_file"
-    { echo "$email_password"; cat "$farm_file"; } > "$farm_file.tmp" && mv "$farm_file.tmp" "$farm_file"
+
+    # 将邮箱和密码写入文件
+    echo "$email_password" > "$farm_file"
+    echo "邮箱和密码已添加到 $farm_file."
 
     # 配置代理信息
     read -p "请输入您的代理信息，格式为 http://user:pass@ip:port: " proxy_info
     proxies_file="$DAWN_DIR/config/data/proxies.txt"
-    [ ! -f "$proxies_file" ] && touch "$proxies_file"
-    { echo "$proxy_info"; cat "$proxies_file"; } > "$proxies_file.tmp" && mv "$proxies_file.tmp" "$proxies_file"
+
+    # 将代理信息写入文件
+    echo "$proxy_info" > "$proxies_file"
+    echo "代理信息已添加到 $proxies_file."
 
     echo "安装、克隆、虚拟环境设置和配置已完成！"
     echo "正在运行脚本 python3.11 run.py..."
