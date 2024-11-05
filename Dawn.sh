@@ -25,13 +25,13 @@ function install_and_configure() {
 
     # 安装 Python 3.11
     function install_python() {
-    sudo apt update
-    sudo apt install -y software-properties-common
-    sudo add-apt-repository ppa:deadsnakes/ppa -y
-    sudo apt install -y python3.11 python3.11-venv python3.11-dev python3-pip
-    # 添加 pip 升级命令
-    python3.11 -m pip install --upgrade pip  # 升级 pip
-    echo "Python 3.11 和 pip 安装完成。"
+        sudo apt update
+        sudo apt install -y software-properties-common
+        sudo add-apt-repository ppa:deadsnakes/ppa -y
+        sudo apt install -y python3.11 python3.11-venv python3.11-dev python3-pip
+        # 添加 pip 升级命令
+        python3.11 -m pip install --upgrade pip  # 升级 pip
+        echo "Python 3.11 和 pip 安装完成。"
     }
 
     # 检查 Python 版本
@@ -43,15 +43,15 @@ function install_and_configure() {
     sudo apt install -y git tmux python3.11-venv libgl1-mesa-glx libglib2.0-0 libsm6 libxext6 libxrender-dev
 
     # 检查 Dawn 目录是否存在，如果存在则删除	
-    if [ -d "$DAWN_DIR" ];then	
-    echo "检测到 Dawn 目录已存在，正在删除..."	
-    rm -rf "$DAWN_DIR"	
-    echo "Dawn 目录已删除。"	
+    if [ -d "$DAWN_DIR" ]; then	
+        echo "检测到 Dawn 目录已存在，正在删除..."	
+        rm -rf "$DAWN_DIR"	
+        echo "Dawn 目录已删除。"	
     fi
     
     # 克隆 GitHub 仓库
     echo "正在从 GitHub 克隆仓库..."
-    git clone https://github.com/sdohuajia/Dawn-py.git Dawn
+    git clone https://github.com/sdohuajia/Dawn-py.git "$DAWN_DIR"
 
     # 检查克隆操作是否成功
     if [ ! -d "$DAWN_DIR" ]; then
@@ -114,17 +114,12 @@ function setup_grassnode() {
         echo "grass 目录已删除。"
     fi
     
-    # 安装 Python 3.11
+    # 安装 npm 环境
     sudo apt update
-    sudo apt install -y software-properties-common
-    sudo add-apt-repository ppa:deadsnakes/ppa -y
-    sudo apt update
-    # 添加 python3.11-venv 的安装
-    sudo apt install -y python3.11 python3.11-venv python3.11-dev python3-pip python3-apt
-    echo "Python 3.11 和 pip 安装完成。"
+    sudo apt install -y nodejs npm
 
     echo "正在从 GitHub 克隆 grass 仓库..."
-    git clone https://github.com/sdohuajia/grass.git
+    git clone https://github.com/sdohuajia/grass-2.0.git grass
     if [ ! -d "grass" ]; then
         echo "克隆失败，请检查网络连接或仓库地址。"
         exit 1
@@ -132,40 +127,32 @@ function setup_grassnode() {
 
     cd "grass" || { echo "无法进入 grass 目录"; exit 1; }
 
-    # 创建虚拟环境
-    python3.11 -m venv venv  # 创建虚拟环境
-    source venv/bin/activate  # 激活虚拟环境
-    
-    echo "正在安装所需的 Python 包..."
-    if [ ! -f requirements.txt ]; then
-        echo "未找到 requirements.txt 文件，无法安装依赖。"
-        exit 1
-    fi
-    
-    python3.11 -m pip install -r requirements.txt
-
-    # 手动安装 httpx
-    python3.11 -m pip install httpx 
-    
     # 配置代理信息
     read -p "请输入您的代理信息，格式为 http://user:pass@ip:port: " proxy_info
-
-    # 指定代理文件路径
-    proxies_file="/root/teneo/proxies.txt"
+    proxy_file="/root/teneo/proxy.txt"  # 更新文件名为 proxy.txt
 
     # 将代理信息写入文件
-    echo "$proxy_info" > "$proxies_file"
+    echo "$proxy_info" > "$proxy_file"
+    echo "代理信息已添加到 $proxy_file."
 
-    # 提示用户
-    echo "代理信息已保存到 $proxies_file"
+    # 获取用户ID并写入 uid.txt
+    read -p "请输入您的 userId: " user_id
+    uid_file="/root/teneo/uid.txt"  # uid 文件路径
 
-    # 运行 setup.py
-    [ -f setup.py ] && { echo "正在运行 setup.py..."; python3.11 setup.py; }
+    # 将 userId 写入文件
+    echo "$user_id" > "$uid_file"
+    echo "userId 已添加到 $uid_file."
 
-    echo "正在使用 screen 启动 main.py..."
-    screen -S grass python3 main.py
-    echo "使用 'screen -r grass' 命令来查看日志。"
-    echo "要退出 screen 会话，请按 Ctrl+A 然后按 D。"
+    # 安装 npm 依赖
+    echo "正在安装 npm 依赖..."
+    npm install
+
+    # 使用 tmux 自动运行 npm start
+    echo "正在使用 tmux 启动 npm..."
+    tmux new-session -d -s grass 'npm start'
+    echo "npm 已在 tmux 会话中启动。"
+    echo "使用 'tmux attach-session -t grass' 命令来查看日志。"
+    echo "要退出 tmux 会话，请按 Ctrl+B 然后按 D。"
 
     # 提示用户按任意键返回主菜单
     read -n 1 -s -r -p "按任意键返回主菜单..."
@@ -184,7 +171,7 @@ function setup_Teneonode() {
     sudo apt update
     sudo apt install -y software-properties-common
     sudo add-apt-repository ppa:deadsnakes/ppa -y
-    sudo apt-get install python3-apt
+    sudo apt-get install -y python3-apt
     # 添加 python3.11-venv 的安装
     sudo apt install -y python3.11 python3.11-venv python3.11-dev python3-pip
     echo "Python 3.11 和 pip 安装完成。"
@@ -250,7 +237,7 @@ function main_menu() {
         echo "3. 安装部署 Teneo"
         echo "4. 退出"
 
-        read -p "请输入您的选择 (1-4): " choice
+        read -p "请输入您的选择 (1,2,3,4): " choice
         case $choice in
             1)
                 install_and_configure  # 调用安装和配置函数
