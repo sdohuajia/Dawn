@@ -137,7 +137,7 @@ function setup_grassnode() {
 
     # 获取用户ID并写入 uid.txt
     read -p "请输入您的 userId: " user_id
-    uid_file="/root/teneo/uid.txt"  # uid 文件路径
+    uid_file="/root/grass/uid.txt"  # uid 文件路径
 
     # 将 userId 写入文件
     echo "$user_id" > "$uid_file"
