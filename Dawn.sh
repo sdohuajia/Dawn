@@ -172,9 +172,9 @@ function setup_Teneonode() {
     sudo apt update
     sudo apt install -y software-properties-common
     sudo add-apt-repository ppa:deadsnakes/ppa -y
-    sudo apt update
+    sudo apt-get install python3-apt
     # 添加 python3.11-venv 的安装
-    sudo apt install -y python3.11 python3.11-venv python3.11-dev python3-pip python3-apt
+    sudo apt install -y python3.11 python3.11-venv python3.11-dev python3-pip
     echo "Python 3.11 和 pip 安装完成。"
 
     echo "正在从 GitHub 克隆 teneo 仓库..."
