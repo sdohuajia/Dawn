@@ -207,11 +207,10 @@ function setup_Teneonode() {
     # 手动安装 httpx
     python3.11 -m pip install httpx 
 
-    # 配置代理信息
-    read -p "请输入您的代理信息，格式为 http://user:pass@ip:port: " proxy_info
-    proxies_file="proxies.txt"  # 修改为新的路径
-    [ ! -f "$proxies_file" ] && touch "$proxies_file"
-    { echo "$proxy_info"; cat "$proxies_file"; } > "$proxies_file.tmp" && mv "$proxies_file.tmp" "$proxies_file"
+    # 配置用户 ID
+    read -p "请输入您的用户 ID: " user_id  # 修改为让用户输入 userId
+    user_id_file="userid"  # 指定用户 ID 文件名
+    echo "$user_id" > "$user_id_file"  # 将用户 ID 写入文件
 
     # 运行 setup.py
     [ -f setup.py ] && { echo "正在运行 setup.py..."; python3.11 setup.py; }
