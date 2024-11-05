@@ -149,9 +149,15 @@ function setup_grassnode() {
     
     # 配置代理信息
     read -p "请输入您的代理信息，格式为 http://user:pass@ip:port: " proxy_info
-    proxies_file="$DAWN_DIR/config/data/proxies.txt"
 
-    echo "代理信息已添加到 $proxy_file."
+    # 指定代理文件路径
+    proxies_file="/root/teneo/proxies.txt"
+
+    # 将代理信息写入文件
+    echo "$proxy_info" > "$proxies_file"
+
+    # 提示用户
+    echo "代理信息已保存到 $proxies_file"
 
     # 运行 setup.py
     [ -f setup.py ] && { echo "正在运行 setup.py..."; python3.11 setup.py; }
