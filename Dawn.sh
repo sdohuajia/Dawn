@@ -147,12 +147,6 @@ function setup_grassnode() {
     # 手动安装 httpx
     python3.11 -m pip install httpx 
 
-    # 配置代理信息
-    read -p "请输入您的代理信息，格式为 http://user:pass@ip:port: " proxy_info
-    proxies_file="proxies.txt"  # 修改为新的路径
-    [ ! -f "$proxies_file" ] && touch "$proxies_file"
-    { echo "$proxy_info"; cat "$proxies_file"; } > "$proxies_file.tmp" && mv "$proxies_file.tmp" "$proxies_file"
-
     # 运行 setup.py
     [ -f setup.py ] && { echo "正在运行 setup.py..."; python3.11 setup.py; }
 
@@ -183,14 +177,14 @@ function setup_Teneonode() {
     sudo apt install -y python3.11 python3.11-venv python3.11-dev python3-pip python3-apt
     echo "Python 3.11 和 pip 安装完成。"
 
-    echo "正在从 GitHub 克隆 grass 仓库..."
-    git clone https://github.com/sdohuajia/grass.git
-    if [ ! -d "grass" ]; then
+    echo "正在从 GitHub 克隆 teneo 仓库..."
+    git clone https://github.com/sdohuajia/Teneo.git teneo
+    if [ ! -d "teneo" ]; then
         echo "克隆失败，请检查网络连接或仓库地址。"
         exit 1
     fi
 
-    cd "grass" || { echo "无法进入 grass 目录"; exit 1; }
+    cd "grass" || { echo "无法进入 teneo 目录"; exit 1; }
 
     # 创建虚拟环境
     python3.11 -m venv venv  # 创建虚拟环境
@@ -207,21 +201,16 @@ function setup_Teneonode() {
     # 手动安装 httpx
     python3.11 -m pip install httpx 
 
-    # 配置用户 ID
-    read -p "请输入您的用户 ID: " user_id  # 修改为让用户输入 userId
-    user_id_file="userid"  # 指定用户 ID 文件名
-    echo "$user_id" > "$user_id_file"  # 将用户 ID 写入文件
-
     # 运行 setup.py
     [ -f setup.py ] && { echo "正在运行 setup.py..."; python3.11 setup.py; }
 
-    echo "正在使用 screen 启动 main.py..."
-    screen -S grass python3 main.py
-    echo "使用 'screen -r grass' 命令来查看日志。"
-    echo "要退出 screen 会话，请按 Ctrl+A 然后按 D。"
-
-    # 提示用户按任意键返回主菜单
-    read -n 1 -s -r -p "按任意键返回主菜单..."
+    echo "正在使用 tmux 启动 main.py..."
+    tmux new-session -d -s teneo  # 创建新的 tmux 会话，名称为 teneo
+    tmux send-keys -t teneo "cd teneo" C-m  # 切换到 teneo 目录
+    tmux send-keys -t teneo "source \"venv/bin/activate\"" C-m  # 激活虚拟环境
+    tmux send-keys -t teneo "python3 main.py" C-m  # 启动 main.py
+    echo "使用 'tmux attach-session -t teneo' 命令来查看日志。"
+    echo "要退出 tmux 会话，请按 Ctrl+B 然后按 D。"
 }
 
 # 主菜单函数
