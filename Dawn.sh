@@ -184,7 +184,7 @@ function setup_Teneonode() {
         exit 1
     fi
 
-    cd "grass" || { echo "无法进入 teneo 目录"; exit 1; }
+    cd "teneo" || { echo "无法进入 teneo 目录"; exit 1; }
 
     # 创建虚拟环境
     python3.11 -m venv venv  # 创建虚拟环境
