@@ -148,8 +148,9 @@ function setup_grassnode() {
     npm install
 
     # 使用 tmux 自动运行 npm start
-    echo "正在使用 tmux 启动 npm..."
-    tmux new-session -d -s grass 'npm start'
+    tmux new-session -d -s grass  # 创建新的 tmux 会话，名称为 teneo
+    tmux send-keys -t teneo "cd grass" C-m  # 切换到 teneo 目录
+    tmux send-keys -t grass "npm start" C-m # 启动 npm start
     echo "npm 已在 tmux 会话中启动。"
     echo "使用 'tmux attach-session -t grass' 命令来查看日志。"
     echo "要退出 tmux 会话，请按 Ctrl+B 然后按 D。"
