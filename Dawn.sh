@@ -29,6 +29,7 @@ function install_and_configure() {
         sudo apt install -y software-properties-common
         sudo add-apt-repository ppa:deadsnakes/ppa -y
         sudo apt install -y python3.11 python3.11-venv python3.11-dev python3-pip
+        sudo apt install libopencv-dev python3-opencv
         # 添加 pip 升级命令
         python3.11 -m pip install --upgrade pip  # 升级 pip
         echo "Python 3.11 和 pip 安装完成。"
