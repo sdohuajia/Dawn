@@ -118,6 +118,10 @@ function setup_grassnode() {
         rm -rf grass
         echo "grass 目录已删除。"
     fi
+    
+    # 安装 npm 环境
+    sudo apt update
+    sudo apt install -y nodejs npm
 
     # 检查 Node.js 版本
     node_version=$(node -v 2>/dev/null)
@@ -131,10 +135,6 @@ function setup_grassnode() {
     else
         echo "Node.js 版本符合要求：$node_version"
     fi
-    
-    # 安装 npm 环境
-    sudo apt update
-    sudo apt install -y nodejs npm
 
     echo "正在从 GitHub 克隆 grass 仓库..."
     git clone https://github.com/sdohuajia/grass-2.0.git grass
