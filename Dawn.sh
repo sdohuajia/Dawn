@@ -129,6 +129,8 @@ function setup_grassnode() {
         echo "当前 Node.js 版本为 $node_version，正在安装 Node.js 16..."
         # 卸载旧版本 Node.js
         sudo apt remove -y nodejs npm
+        # 修复损坏的包
+        sudo apt-get install -f
         # 安装 Node.js 16
         curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
         sudo apt install -y nodejs
