@@ -122,7 +122,8 @@ function setup_grassnode() {
     # 安装 npm 环境
     sudo apt update
     sudo apt install -y nodejs npm
-
+    sudo apt-get install tmux
+    
     # 检查 Node.js 版本
     node_version=$(node -v 2>/dev/null)
     if [[ $? -ne 0 || "$node_version" != v16* ]]; then
