@@ -286,7 +286,7 @@ function setup_Humanity() {
 
     # 配置私钥信息
     read -p "请输入您的私钥: " private_key
-    private_keys_file="/root/teneo/private_keys.txt"
+    private_keys_file="/root/Humanity/private_keys.txt"
 
     # 将私钥信息写入文件
     echo "$private_key" >> "$private_keys_file"
