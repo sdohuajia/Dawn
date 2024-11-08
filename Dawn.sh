@@ -242,6 +242,69 @@ function setup_Teneonode() {
     read -n 1 -s -r -p "按任意键返回主菜单..."
 }
 
+# 安装和配置 Humanity 函数
+function setup_Humanity() {
+    # 检查 Humanity 目录是否存在，如果存在则删除
+    if [ -d "Humanity" ]; then
+        echo "检测到 Humanity 目录已存在，正在删除..."
+        rm -rf Humanity
+        echo "Humanity 目录已删除。"
+    fi
+    
+    # 安装 Python 3.11
+    sudo apt update
+    sudo apt install -y software-properties-common
+    sudo add-apt-repository ppa:deadsnakes/ppa -y
+    sudo apt-get install -y python3-apt
+    # 添加 python3.11-venv 的安装
+    sudo apt install -y python3.11 python3.11-venv python3.11-dev python3-pip
+    echo "Python 3.11 和 pip 安装完成。"
+
+    echo "正在从 GitHub 克隆 teneo 仓库..."
+    git clone https://github.com/sdohuajia/Humanity.git
+    if [ ! -d "Humanity" ]; then
+        echo "克隆失败，请检查网络连接或仓库地址。"
+        exit 1
+    fi
+
+    cd "Humanity" || { echo "无法进入 Humanity 目录"; exit 1; }
+
+    # 创建虚拟环境
+    python3.11 -m venv venv  # 创建虚拟环境
+    source venv/bin/activate  # 激活虚拟环境
+    
+    echo "正在安装所需的 Python 包..."
+    if [ ! -f requirements.txt ]; then
+        echo "未找到 requirements.txt 文件，无法安装依赖。"
+        exit 1
+    fi
+    
+    python3.11 -m pip install -r requirements.txt
+
+    # 手动安装 httpx
+    python3.11 -m pip install httpx 
+
+    # 配置私钥信息
+    read -p "请输入您的私钥: " private_key
+    private_keys_file="/root/teneo/private_keys.txt"
+
+    # 将私钥信息写入文件
+    echo "$private_key" >> "$private_keys_file"
+    echo "私钥信息已添加到 $private_keys_file."
+
+    # 运行脚本
+    echo "正在使用 tmux 启动 bot.py..."
+    tmux new-session -d -s Humanity  # 创建新的 tmux 会话，名称为 Humanity
+    tmux send-keys -t Humanity "cd Humanity" C-m  # 切换到 teneo 目录
+    tmux send-keys -t Humanity "source \"venv/bin/activate\"" C-m  # 激活虚拟环境
+    tmux send-keys -t Humanity "python3 bot.py" C-m  # 启动 bot.py
+    echo "使用 'tmux attach-session -t Humanity' 命令来查看日志。"
+    echo "要退出 tmux 会话，请按 Ctrl+B 然后按 D。"
+
+    # 提示用户按任意键返回主菜单
+    read -n 1 -s -r -p "按任意键返回主菜单..."
+}
+
 # 主菜单函数
 function main_menu() {
     while true; do
@@ -254,9 +317,10 @@ function main_menu() {
         echo "1. 安装部署 Dawn"
         echo "2. 安装部署 Grass"
         echo "3. 安装部署 Teneo"
-        echo "4. 退出"
+        echo "4. Humanity每日签到"
+        echo "5. 退出"
 
-        read -p "请输入您的选择 (1,2,3,4): " choice
+        read -p "请输入您的选择 (1,2,3,4,5): " choice
         case $choice in
             1)
                 install_and_configure  # 调用安装和配置函数
@@ -268,6 +332,9 @@ function main_menu() {
                 setup_Teneonode  # 调用安装和配置函数
                 ;;    
             4)
+                setup_Humanity  # 调用安装和配置函数
+                ;;    
+            5)
                 echo "退出脚本..."
                 exit 0
                 ;;
