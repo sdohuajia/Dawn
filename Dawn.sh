@@ -123,15 +123,12 @@ function setup_grassnode() {
     sudo apt update
     sudo apt install -y nodejs npm
     sudo apt-get install tmux
-    
+    sudo apt install node-cacache node-gyp node-mkdirp node-nopt node-tar node-which
+
     # 检查 Node.js 版本
     node_version=$(node -v 2>/dev/null)
     if [[ $? -ne 0 || "$node_version" != v16* ]]; then
         echo "当前 Node.js 版本为 $node_version，正在安装 Node.js 16..."
-        # 卸载旧版本 Node.js
-        sudo apt remove -y nodejs npm
-        # 修复损坏的包
-        sudo apt-get install -f
         # 安装 Node.js 16
         curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
         sudo apt install -y nodejs
