@@ -86,7 +86,7 @@ function install_and_configure() {
     echo "邮箱和密码已添加到 $farm_file."
 
     # 配置代理信息
-    read -p "请输入您的代理信息，格式为 http://user:pass@ip:port: " proxy_info
+    read -p "请输入您的代理信息，格式为 (http://user:pass@ip:port): " proxy_info
     proxies_file="$DAWN_DIR/config/data/proxies.txt"
 
     # 将代理信息写入文件
