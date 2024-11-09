@@ -103,7 +103,7 @@ function install_and_configure() {
     tmux send-keys -t dawn "python3.11 run.py" C-m  # 运行 Python 脚本
     tmux attach-session -t dawn  # 连接到会话
 
-    echo "使用 'tmux attach-session -t dawn' 命令来查看日志。"
+    echo "使用 'tmux attach -t dawn' 命令来查看日志。"
     echo "要退出 tmux 会话，请按 Ctrl+B 然后按 D。"
 
     # 提示用户按任意键返回主菜单
@@ -170,7 +170,7 @@ function setup_grassnode() {
     tmux send-keys -t teneo "cd grass" C-m  # 切换到 teneo 目录
     tmux send-keys -t grass "npm start" C-m # 启动 npm start
     echo "npm 已在 tmux 会话中启动。"
-    echo "使用 'tmux attach-session -t grass' 命令来查看日志。"
+    echo "使用 'tmux attach -t grass' 命令来查看日志。"
     echo "要退出 tmux 会话，请按 Ctrl+B 然后按 D。"
 
     # 提示用户按任意键返回主菜单
@@ -235,7 +235,7 @@ function setup_Teneonode() {
     tmux send-keys -t teneo "cd teneo" C-m  # 切换到 teneo 目录
     tmux send-keys -t teneo "source \"venv/bin/activate\"" C-m  # 激活虚拟环境
     tmux send-keys -t teneo "python3 main.py" C-m  # 启动 main.py
-    echo "使用 'tmux attach-session -t teneo' 命令来查看日志。"
+    echo "使用 'tmux attach -t teneo' 命令来查看日志。"
     echo "要退出 tmux 会话，请按 Ctrl+B 然后按 D。"
 
     # 提示用户按任意键返回主菜单
@@ -298,7 +298,7 @@ function setup_Humanity() {
     tmux send-keys -t Humanity "cd Humanity" C-m  # 切换到 teneo 目录
     tmux send-keys -t Humanity "source \"venv/bin/activate\"" C-m  # 激活虚拟环境
     tmux send-keys -t Humanity "python3 bot.py" C-m  # 启动 bot.py
-    echo "使用 'tmux attach-session -t Humanity' 命令来查看日志。"
+    echo "使用 'tmux attach -t Humanity' 命令来查看日志。"
     echo "要退出 tmux 会话，请按 Ctrl+B 然后按 D。"
 
     # 提示用户按任意键返回主菜单
