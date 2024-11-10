@@ -314,6 +314,13 @@ function setup_Nodepay() {
         echo "Nodepay 目录已删除。"
     fi
     
+    # 检查并终止已存在的 Nodepay tmux 会话
+    if tmux has-session -t Nodepay 2>/dev/null; then
+        echo "检测到正在运行的 Nodepay 会话，正在终止..."
+        tmux kill-session -t Nodepay
+        echo "已终止现有的 Nodepay 会话。"
+    fi
+    
     # 安装 Python 3.11
     sudo apt update
     sudo apt install -y software-properties-common
