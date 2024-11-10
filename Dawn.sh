@@ -352,7 +352,7 @@ function setup_Nodepay() {
 
     # 配置代理信息
     read -p "请输入您的代理信息，格式为 http://user:pass@ip:port或者socks5://user:pass@ip:port: " proxy_info
-    proxies_file="/root/Nodepay/proxy.txtt"
+    proxies_file="/root/Nodepay/proxy.txt"
 
     # 将代理信息写入文件
     echo "$proxy_info" > "$proxies_file"
