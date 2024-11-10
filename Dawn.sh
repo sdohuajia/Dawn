@@ -351,6 +351,14 @@ function setup_Nodepay() {
     echo "$proxy_info" > "$proxies_file"
     echo "代理信息已添加到 $proxies_file."
 
+    # 获取用户ID并写入 uid.txt
+    read -p "请输入您的 np_tokens: " user_id
+    uid_file="/root/Nodepay/np_tokens.txt"  # uid 文件路径
+
+    # 将 userId 写入文件
+    echo "$user_id" > "$uid_file"
+    echo "userId 已添加到 $uid_file."
+
     echo "正在使用 tmux 启动 main.py..."
     tmux new-session -d -s Nodepay  # 创建新的 tmux 会话，名称为 teneo
     tmux send-keys -t teneo "cd Nodepay" C-m  # 切换到 teneo 目录
