@@ -186,10 +186,10 @@ function setup_grassnode() {
     pip install -r requirements.txt
 
     # 使用 tmux 创建一个新的会话并在其中运行 Python 脚本
-    tmux new-session -d -s grass  # 创建新的 tmux 会话
-    tmux send-keys -t dawn "cd grass" C-m  # 切换到 grass 目录
-    tmux send-keys -t dawn "python3.11 main.py" C-m  # 运行 Python 脚本
-    tmux attach-session -t grass  # 连接到会话
+    tmux new-session -d -s grass
+    tmux send-keys -t grass "cd grass" C-m
+    tmux send-keys -t grass "python3.11 main.py" C-m
+    tmux attach-session -t grass
     echo "使用 'tmux attach -t grass' 命令来查看日志。"
     echo "要退出 tmux 会话，请按 Ctrl+B 然后按 D。"
 
