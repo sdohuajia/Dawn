@@ -118,43 +118,23 @@ function setup_grassnode() {
         rm -rf grass
         echo "grass 目录已删除。"
     fi
-
-     # 检查并终止已存在的 grass tmux 会话
-    if tmux has-session -t grass 2>/dev/null; then
-        echo "检测到正在运行的 grass 会话，正在终止..."
-        tmux kill-session -t grass
-        echo "已终止现有的 grass 会话。"
-    fi
     
-    # 检查 Python 3.11 是否已安装
-    function check_python_installed() {
-        if command -v python3.11 &>/dev/null; then
-            echo "Python 3.11 已安装。"
-        else
-            echo "未安装 Python 3.11，正在安装..."
-            install_python
-        fi
-    }
-
-    # 安装 Python 3.11
-    function install_python() {
-        sudo apt update
-        sudo apt install -y software-properties-common
-        sudo add-apt-repository ppa:deadsnakes/ppa -y
-        sudo apt install -y python3.11 python3.11-venv python3.11-dev python3-pip
-        sudo apt install libopencv-dev python3-opencv
-        # 添加 pip 升级命令
-        python3.11 -m pip install --upgrade pip  # 升级 pip
-        echo "Python 3.11 和 pip 安装完成。"
-    }
-
-    # 检查 Python 版本
-    check_python_installed
-
-    # 更新包列表并安装 git 和 tmux
-    echo "正在更新软件包列表和安装 git 和 tmux..."
+    # 安装 npm 环境
     sudo apt update
-    sudo apt install -y git tmux python3.11-venv libgl1-mesa-glx libglib2.0-0 libsm6 libxext6 libxrender-dev
+    sudo apt install -y nodejs npm
+    sudo apt-get install tmux
+    sudo apt install node-cacache node-gyp node-mkdirp node-nopt node-tar node-which
+
+    # 检查 Node.js 版本
+    node_version=$(node -v 2>/dev/null)
+    if [[ $? -ne 0 || "$node_version" != v16* ]]; then
+        echo "当前 Node.js 版本为 $node_version，正在安装 Node.js 16..."
+        # 安装 Node.js 16
+        curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+        sudo apt install -y nodejs
+    else
+        echo "Node.js 版本符合要求：$node_version"
+    fi
 
     echo "正在从 GitHub 克隆 grass 仓库..."
     git clone https://github.com/sdohuajia/grass-2.0.git grass
@@ -181,15 +161,15 @@ function setup_grassnode() {
     echo "$user_id" > "$uid_file"
     echo "userId 已添加到 $uid_file."
 
-    # 安装 依赖
-    echo "正在安装 依赖..."
-    pip install -r requirements.txt
+    # 安装 npm 依赖
+    echo "正在安装 npm 依赖..."
+    npm install
 
-    # 使用 tmux 创建一个新的会话并在其中运行 Python 脚本
-    tmux new-session -d -s grass
-    tmux send-keys -t grass "cd grass" C-m
-    tmux send-keys -t grass "python3.11 main.py" C-m
-    tmux attach-session -t grass
+    # 使用 tmux 自动运行 npm start
+    tmux new-session -d -s grass  # 创建新的 tmux 会话，名称为 grass
+    tmux send-keys -t teneo "cd grass" C-m  # 切换到 grass 目录
+    tmux send-keys -t grass "npm start" C-m # 启动 npm start
+    echo "npm 已在 tmux 会话中启动。"
     echo "使用 'tmux attach -t grass' 命令来查看日志。"
     echo "要退出 tmux 会话，请按 Ctrl+B 然后按 D。"
 
