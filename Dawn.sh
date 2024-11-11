@@ -118,6 +118,13 @@ function setup_grassnode() {
         rm -rf grass
         echo "grass 目录已删除。"
     fi
+
+    # 检查并终止已存在的 grass tmux 会话
+    if tmux has-session -t grass 2>/dev/null; then
+        echo "检测到正在运行的 grass 会话，正在终止..."
+        tmux kill-session -t grass
+        echo "已终止现有的 Nodepay 会话。"
+    fi
     
     # 安装 npm 环境
     sudo apt update
