@@ -166,8 +166,8 @@ function setup_grassnode() {
     npm install
 
     # 使用 tmux 自动运行 npm start
-    tmux new-session -d -s grass  # 创建新的 tmux 会话，名称为 teneo
-    tmux send-keys -t teneo "cd grass" C-m  # 切换到 teneo 目录
+    tmux new-session -d -s grass  # 创建新的 tmux 会话，名称为 grass
+    tmux send-keys -t teneo "cd grass" C-m  # 切换到 grass 目录
     tmux send-keys -t grass "npm start" C-m # 启动 npm start
     echo "npm 已在 tmux 会话中启动。"
     echo "使用 'tmux attach -t grass' 命令来查看日志。"
@@ -349,17 +349,14 @@ function setup_Nodepay() {
 
     # 手动安装 httpx
     python3.11 -m pip install httpx 
-    pip3 install aiohttp
 
     # 配置代理信息
     read -p "请输入您的代理信息，格式为 http://user:pass@ip:port或者socks5://user:pass@ip:port: " proxy_info
-    proxies_file="/root/Nodepay/proxy.txt"
-    all_file="/root/Nodepay/all.txt"
+    proxies_file="/root/Nodepay/proxy.txtt"
 
-    # 将代理信息写入两个文件
+    # 将代理信息写入文件
     echo "$proxy_info" > "$proxies_file"
-    echo "$proxy_info" > "$all_file"
-    echo "代理信息已添加到 $proxies_file 和 $all_file."
+    echo "代理信息已添加到 $proxies_file."
 
     # 获取用户ID并写入 uid.txt
     read -p "请输入您的 np_tokens: " user_id
