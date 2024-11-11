@@ -157,7 +157,7 @@ function setup_grassnode() {
     sudo apt install -y git tmux python3.11-venv libgl1-mesa-glx libglib2.0-0 libsm6 libxext6 libxrender-dev
 
     echo "正在从 GitHub 克隆 grass 仓库..."
-    git clone https://github.com/sdohuajia/grass-t.git grass
+    git clone https://github.com/sdohuajia/grass-2.0.git grass
     if [ ! -d "grass" ]; then
         echo "克隆失败，请检查网络连接或仓库地址。"
         exit 1
@@ -167,7 +167,7 @@ function setup_grassnode() {
 
     # 配置代理信息
     read -p "请输入您的代理信息，格式为 http://user:pass@ip:port: " proxy_info
-    proxy_file="/root/grass/proxies.txt"  # 更新文件路径为 /root/grass/proxies.txt
+    proxy_file="/root/grass/proxy.txt"  # 更新文件路径为 /root/grass/proxy.txt
 
     # 将代理信息写入文件
     echo "$proxy_info" > "$proxy_file"
@@ -175,7 +175,7 @@ function setup_grassnode() {
 
     # 获取用户ID并写入 uid.txt
     read -p "请输入您的 userId: " user_id
-    uid_file="/root/grass/userid.txt"  # uid 文件路径
+    uid_file="/root/grass/uid.txt"  # uid 文件路径
 
     # 将 userId 写入文件
     echo "$user_id" > "$uid_file"
