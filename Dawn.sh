@@ -166,8 +166,8 @@ function setup_grassnode() {
     npm install
 
     # 使用 tmux 自动运行 npm start
-    tmux new-session -d -s grass  # 创建新的 tmux 会话，名称为 grass
-    tmux send-keys -t teneo "cd grass" C-m  # 切换到 grass 目录
+    tmux new-session -d -s grass  # 创建新的 tmux 会话，名称为 teneo
+    tmux send-keys -t teneo "cd grass" C-m  # 切换到 teneo 目录
     tmux send-keys -t grass "npm start" C-m # 启动 npm start
     echo "npm 已在 tmux 会话中启动。"
     echo "使用 'tmux attach -t grass' 命令来查看日志。"
