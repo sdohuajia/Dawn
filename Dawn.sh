@@ -356,7 +356,8 @@ function setup_Nodepay() {
 
     # 手动安装 httpx
     python3.11 -m pip install httpx 
-
+    python3.11 -m pip install aiohttp
+    
     # 配置代理信息
     read -p "请输入您的代理信息，格式为 http://user:pass@ip:port或者socks5://user:pass@ip:port: " proxy_info
     proxies_file="/root/Nodepay/proxy.txtt"
