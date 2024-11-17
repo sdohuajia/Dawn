@@ -378,7 +378,6 @@ function setup_Nodepay() {
 
     echo "正在使用 tmux 启动 main.py..."
     tmux new-session -d -s Nodepay
-    tmux send-keys -t Nodepay "cd Nodepay" C-m
     tmux send-keys -t Nodepay "python3 main.py" C-m
     echo "使用 'tmux attach -t Nodepay' 命令来查看日志。"
     echo "要退出 tmux 会话，请按 Ctrl+B 然后按 D。"
