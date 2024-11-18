@@ -376,8 +376,8 @@ function setup_Nodepay() {
 
     # 使用 tmux 自动运行 npm start
     tmux new-session -d -s Nodepay  # 创建新的 tmux 会话，名称为 Nodepay
-    tmux send-keys -t teneo "cd Nodepay" C-m  # 切换到 Nodepay 目录
-    tmux send-keys -t grass "npm start" C-m # 启动 npm start
+    tmux send-keys -t Nodepay "cd Nodepay" C-m  # 切换到 Nodepay 目录
+    tmux send-keys -t Nodepay "npm start" C-m # 启动 npm start
     echo "npm 已在 tmux 会话中启动。"
     echo "使用 'tmux attach -t Nodepay' 命令来查看日志。"
     echo "要退出 tmux 会话，请按 Ctrl+B 然后按 D。"
