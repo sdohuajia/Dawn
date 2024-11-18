@@ -328,14 +328,22 @@ function setup_Nodepay() {
         echo "已终止现有的 Nodepay 会话。"
     fi
     
-    # 安装 Python 3.11
+    # 安装 npm 环境
     sudo apt update
-    sudo apt install -y software-properties-common
-    sudo add-apt-repository ppa:deadsnakes/ppa -y
-    sudo apt-get install -y python3-apt
-    # 添加 python3.11-venv 的安装
-    sudo apt install -y python3.11 python3.11-venv python3.11-dev python3-pip
-    echo "Python 3.11 和 pip 安装完成。"
+    sudo apt install -y nodejs npm
+    sudo apt-get install tmux
+    sudo apt install node-cacache node-gyp node-mkdirp node-nopt node-tar node-which
+
+    # 检查 Node.js 版本
+    node_version=$(node -v 2>/dev/null)
+    if [[ $? -ne 0 || "$node_version" != v16* ]]; then
+        echo "当前 Node.js 版本为 $node_version，正在安装 Node.js 16..."
+        # 安装 Node.js 16
+        curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+        sudo apt install -y nodejs
+    else
+        echo "Node.js 版本符合要求：$node_version"
+    fi
 
     echo "正在从 GitHub 克隆 Nodepay 仓库..."
     git clone https://github.com/sdohuajia/Nodepay.git Nodepay
@@ -346,40 +354,32 @@ function setup_Nodepay() {
 
     cd "Nodepay" || { echo "无法进入 Nodepay 目录"; exit 1; }
 
-    echo "正在安装所需的 Python 包..."
-    if [ ! -f requirements.txt ]; then
-        echo "未找到 requirements.txt 文件，无法安装依赖。"
-        exit 1
-    fi
-    
-    python3.11 -m pip install -r requirements.txt
-
-    # 手动安装 httpx
-    python3.11 -m pip install httpx 
-    python3 -m pip install aiohttp
-
     # 配置代理信息
     read -p "请输入您的代理信息，格式为 http://user:pass@ip:port或者socks5://user:pass@ip:port: " proxy_info
     proxies_file="/root/Nodepay/proxy.txt"
-    all_file="/root/Nodepay/all.txt"
 
-    # 将代理信息写入两个文件
+    # 将代理信息写入文件
     echo "$proxy_info" > "$proxies_file"
-    echo "$proxy_info" > "$all_file"
-    echo "代理信息已添加到 $proxies_file 和 $all_file."
+    echo "代理信息已添加到 $proxies_file ."
 
-    # 获取用户ID并写入 uid.txt
+    # 获取用户ID并写入 token.txt
     read -p "请输入您的 np_tokens: " user_id
-    uid_file="/root/Nodepay/np_tokens.txt"  # uid 文件路径
+    uid_file="/root/Nodepay/tokens.txt"  # uid 文件路径
 
     # 将 userId 写入文件
     echo "$user_id" > "$uid_file"
     echo "userId 已添加到 $uid_file."
 
-    echo "正在使用 tmux 启动 main.py..."
-    tmux new-session -d -s Nodepay
-    tmux send-keys -t Nodepay "python3 main.py" C-m
-    echo "使用 'tmux attach -t Nodepay' 命令来查看日志。"
+    # 安装 npm 依赖
+    echo "正在安装 npm 依赖..."
+    npm install
+
+    # 使用 tmux 自动运行 npm start
+    tmux new-session -d -s Nodepay  # 创建新的 tmux 会话，名称为 Nodepay
+    tmux send-keys -t teneo "cd Nodepay" C-m  # 切换到 grass 目录
+    tmux send-keys -t grass "npm start" C-m # 启动 npm start
+    echo "npm 已在 tmux 会话中启动。"
+    echo "使用 'tmux attach -t grass' 命令来查看日志。"
     echo "要退出 tmux 会话，请按 Ctrl+B 然后按 D。"
 
     # 提示用户按任意键返回主菜单
