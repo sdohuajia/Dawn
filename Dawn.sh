@@ -364,7 +364,7 @@ function setup_Nodepay() {
 
     # 获取用户ID并写入 token.txt
     read -p "请输入您的 np_tokens: " user_id
-    uid_file="/root/Nodepay/tokens.txt"  # uid 文件路径
+    uid_file="/root/Nodepay/token.txt"  # uid 文件路径
 
     # 将 userId 写入文件
     echo "$user_id" > "$uid_file"
