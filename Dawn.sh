@@ -52,7 +52,7 @@ function install_and_configure() {
     
     # 克隆 GitHub 仓库
     echo "正在从 GitHub 克隆仓库..."
-    git clone https://github.com/sdohuajia/Dawn-py.git "$DAWN_DIR"
+    git clone https://github.com/sdohuajia/Dawn-bot.git "$DAWN_DIR"
 
     # 检查克隆操作是否成功
     if [ ! -d "$DAWN_DIR" ]; then
@@ -74,33 +74,46 @@ function install_and_configure() {
         echo "未找到 requirements.txt 文件，无法安装依赖。"
         exit 1
     fi
-    pip install -r requirements.txt
-    pip install httpx
+    pip3 install -r requirements.txt
+    pip3 install httpx
 
-    # 配置邮件和密码
-    read -p "请输入您的邮箱和密码，格式为 email:password: " email_password
-    farm_file="$DAWN_DIR/config/data/farm.txt"
+    # 配置邮件和Token
+    echo "请分别输入您的邮箱和Token"
+    read -p "请输入邮箱: " email
+    read -p "请输入Token: " token
 
-    # 将邮箱和密码写入文件
-    echo "$email_password" > "$farm_file"
-    echo "邮箱和密码已添加到 $farm_file."
+    # 验证输入不为空
+    while [[ -z "$email" || -z "$token" ]]; do
+    echo "错误：邮箱和Token都不能为空！"
+    read -p "请输入邮箱: " email
+    read -p "请输入Token: " token
+    done
+
+    # 组合成需要的格式
+    email_token="${email}:${token}"
+    farm_file="$DAWN_DIR/accounts.txt"
+
+    # 将邮箱和Token写入文件
+    echo "$email_token" > "$farm_file"
+    echo "邮箱和Token已成功添加到 $farm_file"
+    echo "保存的格式为: $email_token"
 
     # 配置代理信息
     read -p "请输入您的代理信息，格式为 (http://user:pass@ip:port): " proxy_info
-    proxies_file="$DAWN_DIR/config/data/proxies.txt"
+    proxies_file="$DAWN_DIR/proxies.txt"
 
     # 将代理信息写入文件
     echo "$proxy_info" > "$proxies_file"
     echo "代理信息已添加到 $proxies_file."
 
     echo "安装、克隆、虚拟环境设置和配置已完成！"
-    echo "正在运行脚本 python3.11 run.py..."
+    echo "正在运行脚本 python3.11 main.py..."
     
     # 使用 tmux 创建一个新的会话并在其中运行 Python 脚本
     tmux new-session -d -s dawn  # 创建新的 tmux 会话
     tmux send-keys -t dawn "cd $DAWN_DIR" C-m  # 切换到 Dawn 目录
     tmux send-keys -t dawn "source \"$DAWN_DIR/venv/bin/activate\"" C-m  # 激活虚拟环境
-    tmux send-keys -t dawn "python3.11 run.py" C-m  # 运行 Python 脚本
+    tmux send-keys -t dawn "python3.11 main.py" C-m  # 运行 Python 脚本
     tmux attach-session -t dawn  # 连接到会话
 
     echo "使用 'tmux attach -t dawn' 命令来查看日志。"
