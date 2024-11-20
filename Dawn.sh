@@ -49,6 +49,13 @@ function install_and_configure() {
         rm -rf "$DAWN_DIR"	
         echo "Dawn 目录已删除。"	
     fi
+
+     # 检查并终止已存在的 Dawn tmux 会话
+    if tmux has-session -t dawn 2>/dev/null; then
+        echo "检测到正在运行的 dawn 会话，正在终止..."
+        tmux kill-session -t dawn
+        echo "已终止现有的 dawn 会话。"
+    fi
     
     # 克隆 GitHub 仓库
     echo "正在从 GitHub 克隆仓库..."
