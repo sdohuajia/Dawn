@@ -70,11 +70,6 @@ function install_and_configure() {
     # 进入仓库目录
     cd "$DAWN_DIR" || { echo "无法进入 Dawn 目录"; exit 1; }
 
-    # 创建并激活虚拟环境
-    echo "正在创建和激活虚拟环境..."
-    python3.11 -m venv venv
-    source "$DAWN_DIR/venv/bin/activate"
-
     # 安装依赖
     echo "正在安装所需的 Python 包..."
     if [ ! -f requirements.txt ]; then
@@ -82,7 +77,6 @@ function install_and_configure() {
         exit 1
     fi
     pip3 install -r requirements.txt
-    pip3 install httpx
 
     # 配置邮件和Token
     echo "请分别输入您的邮箱和Token"
@@ -114,13 +108,12 @@ function install_and_configure() {
     echo "代理信息已添加到 $proxies_file."
 
     echo "安装、克隆、虚拟环境设置和配置已完成！"
-    echo "正在运行脚本 python3.11 main.py..."
+    echo "正在运行脚本 python3 main.py..."
     
     # 使用 tmux 创建一个新的会话并在其中运行 Python 脚本
     tmux new-session -d -s dawn  # 创建新的 tmux 会话
     tmux send-keys -t dawn "cd $DAWN_DIR" C-m  # 切换到 Dawn 目录
-    tmux send-keys -t dawn "source \"$DAWN_DIR/venv/bin/activate\"" C-m  # 激活虚拟环境
-    tmux send-keys -t dawn "python3.11 main.py" C-m  # 运行 Python 脚本
+    tmux send-keys -t dawn "python3 main.py" C-m  # 运行 Python 脚本
     tmux attach-session -t dawn  # 连接到会话
 
     echo "使用 'tmux attach -t dawn' 命令来查看日志。"
