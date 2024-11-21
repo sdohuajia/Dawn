@@ -70,15 +70,6 @@ function install_and_configure() {
     # 进入仓库目录
     cd "$DAWN_DIR" || { echo "无法进入 Dawn 目录"; exit 1; }
 
-    # 安装依赖
-    echo "正在安装所需的 Python 包..."
-    if [ ! -f requirements.txt ]; then
-        echo "未找到 requirements.txt 文件，无法安装依赖。"
-        exit 1
-    fi
-    
-    python3.11 -m pip install -r requirements.txt
-
     # 创建虚拟环境
     python3.11 -m venv venv  # 创建虚拟环境
     source venv/bin/activate  # 激活虚拟环境
@@ -109,7 +100,7 @@ function install_and_configure() {
 
     # 组合成需要的格式
     email_token="${email}:${password}"
-    farm_file="$DAWN_DIR/config/data/farm.txt"
+    farm_file="Dawn/config/data/farm.txt"
 
     # 配置代理信息
     read -p "请输入您的代理信息，格式为 (http://user:pass@ip:port): " proxy_info
@@ -126,7 +117,8 @@ function install_and_configure() {
     tmux new-session -d -s Dawn  # 创建新的 tmux 会话，名称为 Dawn
     tmux send-keys -t Dawn "cd Dawn" C-m  # 切换到 Dawn 目录
     tmux send-keys -t Dawn "source \"venv/bin/activate\"" C-m  # 激活虚拟环境
-    tmux send-keys -t Dawn "python3 run.py" C-m  # 启动 main.py
+    tmux send-keys -t dawn "python3.11 -m pip install -r requirements.txt" C-m  # 安装依赖
+    tmux send-keys -t Dawn "python3.11 run.py" C-m  # 启动 main.py
     echo "使用 'tmux attach -t Dawn' 命令来查看日志。"
     echo "要退出 tmux 会话，请按 Ctrl+B 然后按 D。"
 
