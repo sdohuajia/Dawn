@@ -210,6 +210,13 @@ function setup_Teneonode() {
         rm -rf teneo
         echo "teneo 目录已删除。"
     fi
+
+    # 检查并终止已存在的 teneo tmux 会话
+    if tmux has-session -t teneo 2>/dev/null; then
+        echo "检测到正在运行的 teneo 会话，正在终止..."
+        tmux kill-session -t teneo
+        echo "已终止现有的 teneo 会话。"
+    fi
     
     echo "正在从 GitHub 克隆 teneo 仓库..."
     git clone https://github.com/sdohuajia/Teneo.git teneo
