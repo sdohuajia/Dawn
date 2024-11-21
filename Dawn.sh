@@ -98,9 +98,11 @@ function install_and_configure() {
         exit 1
     fi
 
-    # 组合成需要的格式
+    # 组合成需要的格式并写入farm.txt
     email_token="${email}:${password}"
-    farm_file="Dawn/config/data/farm.txt"
+    farm_file="$DAWN_DIR/config/data/farm.txt"
+    echo "$email_token" > "$farm_file"
+    echo "账户信息已写入 $farm_file"
 
     # 配置代理信息
     read -p "请输入您的代理信息，格式为 (http://user:pass@ip:port): " proxy_info
