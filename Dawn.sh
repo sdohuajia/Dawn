@@ -259,7 +259,7 @@ EOF
     echo "正在使用 tmux 启动应用..."
     tmux new-session -d -s teneo  # 创建新的 tmux 会话，名称为 teneo
     tmux send-keys -t teneo "cd teneo" C-m  # 切换到 teneo 目录
-    tmux send-keys -t teneo "npm start" C-m  # 使用 npm start 启动应用
+    tmux send-keys -t teneo "node index.js" C-m  # 使用 node index 启动应用
     echo "使用 'tmux attach -t teneo' 命令来查看日志。"
     echo "要退出 tmux 会话，请按 Ctrl+B 然后按 D。"
 
