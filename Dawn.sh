@@ -114,12 +114,12 @@ function install_and_configure() {
     echo "正在运行脚本 python3 run.py..."
     
     echo "正在使用 tmux 启动 main.py..."
-    tmux new-session -d -s Dawn  # 创建新的 tmux 会话，名称为 Dawn
-    tmux send-keys -t Dawn "cd Dawn" C-m  # 切换到 Dawn 目录
-    tmux send-keys -t Dawn "source \"venv/bin/activate\"" C-m  # 激活虚拟环境
+    tmux new-session -d -s dawn  # 创建新的 tmux 会话，名称为 dawn
+    tmux send-keys -t dawn "cd Dawn" C-m  # 切换到 Dawn 目录
+    tmux send-keys -t dawn "source \"venv/bin/activate\"" C-m  # 激活虚拟环境
     tmux send-keys -t dawn "python3.11 -m pip install -r requirements.txt" C-m  # 安装依赖
-    tmux send-keys -t Dawn "python3.11 run.py" C-m  # 启动 main.py
-    echo "使用 'tmux attach -t Dawn' 命令来查看日志。"
+    tmux send-keys -t dawn "python3.11 run.py" C-m  # 启动 main.py
+    echo "使用 'tmux attach -t dawn' 命令来查看日志。"
     echo "要退出 tmux 会话，请按 Ctrl+B 然后按 D。"
 
     # 提示用户按任意键返回主菜单
