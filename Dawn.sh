@@ -76,7 +76,8 @@ function install_and_configure() {
         echo "未找到 requirements.txt 文件，无法安装依赖。"
         exit 1
     fi
-    pip3 install -r requirements.txt
+    
+    python3.11 -m pip install -r requirements.txt
 
     # 创建虚拟环境
     python3.11 -m venv venv  # 创建虚拟环境
