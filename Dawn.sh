@@ -78,45 +78,55 @@ function install_and_configure() {
     fi
     pip3 install -r requirements.txt
 
+    # 创建虚拟环境
+    python3.11 -m venv venv  # 创建虚拟环境
+    source venv/bin/activate  # 激活虚拟环境
+
     # 配置邮件和Token
-    echo "请分别输入您的邮箱和Token"
+    echo "请分别输入您的邮箱、密码和2captcha API密钥"
     read -p "请输入邮箱: " email
-    read -p "请输入Token: " token
+    read -p "请输入密码: " password
+    read -p "请输入2captcha API密钥: " captcha_key
 
     # 验证输入不为空
-    while [[ -z "$email" || -z "$token" ]]; do
-    echo "错误：邮箱和Token都不能为空！"
-    read -p "请输入邮箱: " email
-    read -p "请输入Token: " token
+    while [[ -z "$email" || -z "$password" || -z "$captcha_key" ]]; do
+        echo "错误：邮箱、密码和2captcha API密钥都不能为空！"
+        read -p "请输入邮箱: " email
+        read -p "请输入密码: " password
+        read -p "请输入2captcha API密钥: " captcha_key
     done
 
-    # 组合成需要的格式
-    email_token="${email}:${token}"
-    farm_file="$DAWN_DIR/accounts.txt"
+    # 更新settings.yaml文件中的two_captcha_api_key
+    settings_file="$DAWN_DIR/The-Dawn-Bot/config/settings.yaml"
+    if [ -f "$settings_file" ]; then
+        # 使用sed替换two_captcha_api_key的值
+        sed -i "s/two_captcha_api_key: .*/two_captcha_api_key: \"$captcha_key\"/" "$settings_file"
+    else
+        echo "错误：未找到settings.yaml文件"
+        exit 1
+    fi
 
-    # 将邮箱和Token写入文件
-    echo "$email_token" > "$farm_file"
-    echo "邮箱和Token已成功添加到 $farm_file"
-    echo "保存的格式为: $email_token"
+    # 组合成需要的格式
+    email_token="${email}:${password}"
+    farm_file="$DAWN_DIR/The-Dawn-Bot/config/farm.txt"
 
     # 配置代理信息
     read -p "请输入您的代理信息，格式为 (http://user:pass@ip:port): " proxy_info
-    proxies_file="$DAWN_DIR/proxies.txt"
+    proxies_file="$DAWN_DIR/The-Dawn-Bot/config/proxies.txt"
 
     # 将代理信息写入文件
     echo "$proxy_info" > "$proxies_file"
     echo "代理信息已添加到 $proxies_file."
 
     echo "安装、克隆、虚拟环境设置和配置已完成！"
-    echo "正在运行脚本 python3 main.py..."
+    echo "正在运行脚本 python3 run.py..."
     
-    # 使用 tmux 创建一个新的会话并在其中运行 Python 脚本
-    tmux new-session -d -s dawn  # 创建新的 tmux 会话
-    tmux send-keys -t dawn "cd $DAWN_DIR" C-m  # 切换到 Dawn 目录
-    tmux send-keys -t dawn "python3 main.py" C-m  # 运行 Python 脚本
-    tmux attach-session -t dawn  # 连接到会话
-
-    echo "使用 'tmux attach -t dawn' 命令来查看日志。"
+    echo "正在使用 tmux 启动 main.py..."
+    tmux new-session -d -s Dawn  # 创建新的 tmux 会话，名称为 Dawn
+    tmux send-keys -t Dawn "cd Dawn" C-m  # 切换到 Dawn 目录
+    tmux send-keys -t Dawn "source \"venv/bin/activate\"" C-m  # 激活虚拟环境
+    tmux send-keys -t Dawn "python3 run.py" C-m  # 启动 main.py
+    echo "使用 'tmux attach -t Dawn' 命令来查看日志。"
     echo "要退出 tmux 会话，请按 Ctrl+B 然后按 D。"
 
     # 提示用户按任意键返回主菜单
