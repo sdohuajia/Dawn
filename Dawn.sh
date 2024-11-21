@@ -211,15 +211,6 @@ function setup_Teneonode() {
         echo "teneo 目录已删除。"
     fi
     
-    # 安装 Python 3.11
-    sudo apt update
-    sudo apt install -y software-properties-common
-    sudo add-apt-repository ppa:deadsnakes/ppa -y
-    sudo apt-get install -y python3-apt
-    # 添加 python3.11-venv 的安装
-    sudo apt install -y python3.11 python3.11-venv python3.11-dev python3-pip
-    echo "Python 3.11 和 pip 安装完成。"
-
     echo "正在从 GitHub 克隆 teneo 仓库..."
     git clone https://github.com/sdohuajia/Teneo.git teneo
     if [ ! -d "teneo" ]; then
@@ -229,37 +220,46 @@ function setup_Teneonode() {
 
     cd "teneo" || { echo "无法进入 teneo 目录"; exit 1; }
 
-    # 创建虚拟环境
-    python3.11 -m venv venv  # 创建虚拟环境
-    source venv/bin/activate  # 激活虚拟环境
-    
-    echo "正在安装所需的 Python 包..."
-    if [ ! -f requirements.txt ]; then
-        echo "未找到 requirements.txt 文件，无法安装依赖。"
-        exit 1
+    # 安装 Node.js 和 npm（如果尚未安装）
+    if ! command -v npm &> /dev/null; then
+    echo "正在安装 Node.js 和 npm..."
+    curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+    sudo apt-get install -y nodejs
     fi
-    
-    python3.11 -m pip install -r requirements.txt
 
-    # 手动安装 httpx
-    python3.11 -m pip install httpx 
+    # 安装 npm 依赖项
+    echo "正在安装 npm 依赖项..."
+    npm install || { echo "npm 依赖项安装失败"; exit 1; }
+
+    # 创建 account.js 文件
+    echo "正在配置账户信息..."
+    read -p "请输入邮箱: " email
+    read -s -p "请输入密码: " password
+    echo  # 换行
+
+    # 创建 account.js 文件
+    cat > account.js << EOF
+module.exports = [
+  {
+    email: "${email}",
+    password: "${password}"
+  },
+  // Add more accounts as needed
+];
+EOF
 
     # 配置代理信息
     read -p "请输入您的代理信息，格式为 http://user:pass@ip:port: " proxy_info
-    proxies_file="/root/teneo/proxies.txt"
+    proxies_file="/root/teneo/proxy.txt"
 
     # 将代理信息写入文件
     echo "$proxy_info" > "$proxies_file"
     echo "代理信息已添加到 $proxies_file."
 
-    # 运行 setup.py
-    [ -f setup.py ] && { echo "正在运行 setup.py..."; python3.11 setup.py; }
-
-    echo "正在使用 tmux 启动 main.py..."
+    echo "正在使用 tmux 启动应用..."
     tmux new-session -d -s teneo  # 创建新的 tmux 会话，名称为 teneo
     tmux send-keys -t teneo "cd teneo" C-m  # 切换到 teneo 目录
-    tmux send-keys -t teneo "source \"venv/bin/activate\"" C-m  # 激活虚拟环境
-    tmux send-keys -t teneo "python3 main.py" C-m  # 启动 main.py
+    tmux send-keys -t teneo "npm start" C-m  # 使用 npm start 启动应用
     echo "使用 'tmux attach -t teneo' 命令来查看日志。"
     echo "要退出 tmux 会话，请按 Ctrl+B 然后按 D。"
 
