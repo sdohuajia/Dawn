@@ -97,7 +97,7 @@ function install_and_configure() {
     done
 
     # 更新settings.yaml文件中的two_captcha_api_key
-    settings_file="$DAWN_DIR/Dawn/config/settings.yaml"
+    settings_file="$DAWN_DIR/config/settings.yaml"
     if [ -f "$settings_file" ]; then
         # 使用sed替换two_captcha_api_key的值
         sed -i "s/two_captcha_api_key: .*/two_captcha_api_key: \"$captcha_key\"/" "$settings_file"
