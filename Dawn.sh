@@ -413,7 +413,9 @@ function setup_Nodepay() {
     tmux send-keys -t Nodepay "cd Nodepay" C-m  # 切换到 Nodepay 目录
     tmux send-keys -t Nodepay "python3 -m pip install -r requirements.txt" C-m  # 安装依赖
     tmux send-keys -t Nodepay "python3 main.py" C-m  # 启动 main.py
-
+    echo "使用 'tmux attach -t Nodepay' 命令来查看日志。"
+    echo "要退出 tmux 会话，请按 Ctrl+B 然后按 D。"
+    
     # 提示用户按任意键返回主菜单
     read -n 1 -s -r -p "按任意键返回主菜单..."
 }
