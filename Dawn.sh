@@ -392,7 +392,7 @@ function setup_Nodepay() {
     cd "Nodepay" || { echo "无法进入 Nodepay 目录"; exit 1; }
 
     # 配置代理信息
-    read -p "请输入您的代理信息，格式为 （ip地址:端口:账户名称:账户密码）: " proxy_info
+    read -p "请输入您的代理信息，格式为 （http://user:pass@ip:port或者socks5）: " proxy_info
     proxies_file="/root/Nodepay/proxy.txt"
 
     # 将代理信息写入文件
