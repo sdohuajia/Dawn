@@ -288,6 +288,7 @@ function setup_Humanity() {
     sudo apt install -y software-properties-common
     sudo add-apt-repository ppa:deadsnakes/ppa -y
     sudo apt-get install -y python3-apt
+    sudo apt-get install -y python3-dev libffi-dev
     # 添加 python3.11-venv 的安装
     sudo apt install -y python3.11 python3.11-venv python3.11-dev python3-pip
     echo "Python 3.11 和 pip 安装完成。"
@@ -315,7 +316,7 @@ function setup_Humanity() {
 
     # 手动安装 httpx
     python3.11 -m pip install httpx 
-
+    
     # 配置私钥信息
     read -p "请输入您的私钥: " private_key
     private_keys_file="/root/Humanity/private_keys.txt"
