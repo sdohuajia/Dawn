@@ -354,6 +354,7 @@ function setup_Nodepay() {
         echo "已终止现有的 Nodepay 会话。"
     fi
     
+    # 检查 Python 是否安装
     function check_python_installed() {
         if command -v python3.11 &>/dev/null; then
             echo "Python 3.11 已安装。"
@@ -363,25 +364,23 @@ function setup_Nodepay() {
         fi
     }
 
-    # 安装 Python 3.11
+    # 安装 Python 3.11 和系统依赖
     function install_python() {
+        echo "正在安装 Python 3.11 和系统依赖..."
         sudo apt update
         sudo apt install -y software-properties-common
         sudo add-apt-repository ppa:deadsnakes/ppa -y
-        sudo apt install -y python3.11 python3.11-venv python3.11-dev python3-pip
-        sudo apt install libopencv-dev python3-opencv
-        # 添加 pip 升级命令
-        python3.11 -m pip install --upgrade pip  # 升级 pip
-        echo "Python 3.11 和 pip 安装完成。"
+        
+        # 安装 Python 和系统依赖
+        sudo apt install -y python3.11 python3.11-venv python3.11-dev python3-pip libopencv-dev python3-opencv build-essential libssl-dev libffi-dev libxml2-dev libxslt1-dev zlib1g-dev libjpeg-dev libpng-dev libtiff-dev libcurl4-openssl-dev libgl1-mesa-glx libglib2.0-0 libsm6 libxext6 libxrender-dev libcairo2-dev pkg-config gcc g++ make git tmux
+
+        # 升级 pip
+        python3.11 -m pip install --upgrade pip
+        echo "Python 3.11 和系统依赖安装完成。"
     }
 
     # 检查 Python 版本
     check_python_installed
-
-    # 更新包列表并安装 git 和 tmux
-    echo "正在更新软件包列表和安装 git 和 tmux..."
-    sudo apt update
-    sudo apt install -y git tmux python3.11-venv libgl1-mesa-glx libglib2.0-0 libsm6 libxext6 libxrender-dev
 
     echo "正在从 GitHub 克隆 Nodepay 仓库..."
     git clone https://github.com/sdohuajia/Nodepay.git Nodepay
@@ -398,24 +397,34 @@ function setup_Nodepay() {
 
     # 将代理信息写入文件
     echo "$proxy_info" > "$proxies_file"
-    echo "代理信息已添加到 $proxies_file ."
+    echo "代理信息已添加到 $proxies_file"
 
     # 获取用户ID并写入 token.txt
     read -p "请输入您的 np_tokens: " user_id
-    uid_file="/root/Nodepay/token.txt"  # uid 文件路径
+    uid_file="/root/Nodepay/token.txt"
 
     # 将 userId 写入文件
     echo "$user_id" > "$uid_file"
-    echo "userId 已添加到 $uid_file."
+    echo "userId 已添加到 $uid_file"
 
-    echo "安装、克隆、虚拟环境设置和配置已完成！"
-    echo "正在运行脚本 python3 main.py..."
-    
+    # 创建并配置 Python 虚拟环境
+    echo "正在创建 Python 虚拟环境..."
+    python3.11 -m venv venv
+    source venv/bin/activate
+
+    echo "正在安装 Python 依赖..."
+    python3.11 -m pip install --upgrade pip wheel setuptools
+    python3.11 -m pip install -r requirements.txt
+    python3.11 -m pip install opencv-python-headless pillow requests aiohttp cloudscraper loguru colorama
+
+    # 使用 tmux 启动应用
     echo "正在使用 tmux 启动 main.py..."
-    tmux new-session -d -s Nodepay  # 创建新的 tmux 会话，名称为 Nodepay
-    tmux send-keys -t Nodepay "cd Nodepay" C-m  # 切换到 Nodepay 目录
-    tmux send-keys -t Nodepay "python3 -m pip install -r requirements.txt" C-m  # 安装依赖
-    tmux send-keys -t Nodepay "python3 -m main.py" C-m  # 启动 main.py
+    tmux new-session -d -s Nodepay
+    tmux send-keys -t Nodepay "cd /root/Nodepay" C-m
+    tmux send-keys -t Nodepay "source venv/bin/activate" C-m
+    tmux send-keys -t Nodepay "python3 main.py" C-m
+
+    echo "安装和配置完成！"
     echo "使用 'tmux attach -t Nodepay' 命令来查看日志。"
     echo "要退出 tmux 会话，请按 Ctrl+B 然后按 D。"
 
