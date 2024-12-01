@@ -407,26 +407,12 @@ function setup_Nodepay() {
     echo "$user_id" > "$uid_file"
     echo "userId 已添加到 $uid_file"
 
-    # 创建并配置 Python 虚拟环境
-    echo "正在创建 Python 虚拟环境..."
-    python3.11 -m venv venv
-    source venv/bin/activate
-
-    echo "正在安装 Python 依赖..."
-    python3.11 -m pip install --upgrade pip wheel setuptools
-    python3.11 -m pip install -r requirements.txt
-    python3.11 -m pip install opencv-python-headless pillow requests aiohttp cloudscraper loguru colorama
-
     # 使用 tmux 启动应用
     echo "正在使用 tmux 启动 main.py..."
-    tmux new-session -d -s Nodepay
-    tmux send-keys -t Nodepay "cd /root/Nodepay" C-m
-    tmux send-keys -t Nodepay "source venv/bin/activate" C-m
-    tmux send-keys -t Nodepay "python3 main.py" C-m
-
-    echo "安装和配置完成！"
-    echo "使用 'tmux attach -t Nodepay' 命令来查看日志。"
-    echo "要退出 tmux 会话，请按 Ctrl+B 然后按 D。"
+    tmux new-session -d -s Nodepay  # 创建新的 tmux 会话，名称为 Nodepay
+    tmux send-keys -t Nodepay "cd Nodepay" C-m  # 切换到 Nodepay 目录
+    tmux send-keys -t Nodepay "python3 -m pip install -r requirements.txt" C-m  # 安装依赖
+    tmux send-keys -t Nodepay "python3 main.py" C-m  # 启动 main.py
 
     # 提示用户按任意键返回主菜单
     read -n 1 -s -r -p "按任意键返回主菜单..."
