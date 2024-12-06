@@ -330,7 +330,7 @@ function setup_Humanity() {
     tmux new-session -d -s Humanity  # 创建新的 tmux 会话，名称为 Humanity
     tmux send-keys -t Humanity "cd Humanity" C-m  # 切换到 teneo 目录
     tmux send-keys -t Humanity "source \"venv/bin/activate\"" C-m  # 激活虚拟环境
-    tmux send-keys -t Humanity "python3 bot.py" C-m  # 启动 bot.py
+    tmux send-keys -t Humanity "python3 main.py" C-m  # 启动 main.py
     echo "使用 'tmux attach -t Humanity' 命令来查看日志。"
     echo "要退出 tmux 会话，请按 Ctrl+B 然后按 D。"
 
