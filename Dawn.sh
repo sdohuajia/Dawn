@@ -144,23 +144,37 @@ function setup_grassnode() {
         echo "已终止现有的 Nodepay 会话。"
     fi
     
-    # 安装 npm 环境
-    sudo apt update
-    sudo apt install -y nodejs npm
-    sudo apt-get install tmux
-    sudo apt install node-cacache node-gyp node-mkdirp node-nopt node-tar node-which
-    sudo apt install -y python3.11 python3.11-venv python3.11-dev python3-pip
+    # 安装和配置函数
+function install_and_configure() {
+    # 检查 Python 3.11 是否已安装
+    function check_python_installed() {
+        if command -v python3.11 &>/dev/null; then
+            echo "Python 3.11 已安装。"
+        else
+            echo "未安装 Python 3.11，正在安装..."
+            install_python
+        fi
+    }
 
-    # 检查 Node.js 版本
-    node_version=$(node -v 2>/dev/null)
-    if [[ $? -ne 0 || "$node_version" != v16* ]]; then
-        echo "当前 Node.js 版本为 $node_version，正在安装 Node.js 16..."
-        # 安装 Node.js 16
-        curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
-        sudo apt install -y nodejs
-    else
-        echo "Node.js 版本符合要求：$node_version"
-    fi
+    # 安装 Python 3.11
+    function install_python() {
+        sudo apt update
+        sudo apt install -y software-properties-common
+        sudo add-apt-repository ppa:deadsnakes/ppa -y
+        sudo apt install -y python3.11 python3.11-venv python3.11-dev python3-pip
+        sudo apt install libopencv-dev python3-opencv
+        # 添加 pip 升级命令
+        python3.11 -m pip install --upgrade pip  # 升级 pip
+        echo "Python 3.11 和 pip 安装完成。"
+    }
+
+    # 检查 Python 版本
+    check_python_installed
+
+    # 更新包列表并安装 git 和 tmux
+    echo "正在更新软件包列表和安装 git 和 tmux..."
+    sudo apt update
+    sudo apt install -y git tmux python3.11-venv libgl1-mesa-glx libglib2.0-0 libsm6 libxext6 libxrender-dev
 
     echo "正在从 GitHub 克隆 grass 仓库..."
     git clone https://github.com/sdohuajia/grass-1.25.git grass
@@ -187,33 +201,18 @@ function setup_grassnode() {
     echo "$user_id" > "$uid_file"
     echo "userId 已添加到 $uid_file."
 
-    # 创建新的 tmux 会话，名称为 grass
-    tmux new-session -d -s grass 
-
-    # 在 tmux 会话中执行命令
-    tmux send-keys -t grass "echo '正在安装依赖...'" C-m
-    tmux send-keys -t grass "python3 -m venv venv" C-m  # 创建虚拟环境
-    tmux send-keys -t grass "if [ \$? -ne 0 ]; then echo '创建虚拟环境失败，请检查 Python 安装。'; exit 1; fi" C-m
-
-    tmux send-keys -t grass "source venv/bin/activate" C-m  # 激活虚拟环境
-    tmux send-keys -t grass "if [ \$? -ne 0 ]; then echo '激活虚拟环境失败。'; exit 1; fi" C-m
-
-    tmux send-keys -t grass "pip install -r requirements.txt" C-m  # 安装依赖
-    tmux send-keys -t grass "if [ \$? -ne 0 ]; then echo '安装依赖失败，请检查 requirements.txt 文件。'; exit 1; fi" C-m
-
-    tmux send-keys -t grass "echo '依赖安装完成！'" C-m
-
-    # 进入 grass 目录并运行 Python 脚本
+    echo "正在使用 tmux 启动 main.py..."
+    tmux new-session -d -s grass  # 创建新的 tmux 会话，名称为 grass
     tmux send-keys -t grass "cd grass" C-m  # 切换到 grass 目录
-    tmux send-keys -t grass "python3 main.py" C-m  # 启动 python3 main.py
-
-    # 提示用户
-    echo "Python 脚本已在 tmux 会话中启动。"
+    tmux send-keys -t grass "source \"venv/bin/activate\"" C-m  # 激活虚拟环境
+    tmux send-keys -t grass "python3.11 -m pip install -r requirements.txt" C-m  # 安装依赖
+    tmux send-keys -t grass "python3.11 main.py" C-m  # 启动 main.py
     echo "使用 'tmux attach -t grass' 命令来查看日志。"
     echo "要退出 tmux 会话，请按 Ctrl+B 然后按 D。"
 
     # 提示用户按任意键返回主菜单
     read -n 1 -s -r -p "按任意键返回主菜单..."
+
 }
 
 # 安装和配置 Teneo 函数
