@@ -130,6 +130,11 @@ function install_and_configure() {
 
 # 安装和配置 Grassnode 函数
 function setup_grassnode() {
+    # 更新软件包列表并安装必要的软件
+    echo "正在安装必要的软件包..."
+    sudo apt update
+    sudo apt install -y python3.11 python3.11-venv python3-pip git tmux
+
     # 检查 grass 目录是否存在，如果存在则删除
     if [ -d "grass" ]; then
         echo "检测到 grass 目录已存在，正在删除..."
@@ -141,41 +146,9 @@ function setup_grassnode() {
     if tmux has-session -t grass 2>/dev/null; then
         echo "检测到正在运行的 grass 会话，正在终止..."
         tmux kill-session -t grass
-        echo "已终止现有的 Nodepay 会话。"
+        echo "已终止现有的 grass 会话。"
     fi
     
-    # 安装和配置函数
-function install_and_configure() {
-    # 检查 Python 3.11 是否已安装
-    function check_python_installed() {
-        if command -v python3.11 &>/dev/null; then
-            echo "Python 3.11 已安装。"
-        else
-            echo "未安装 Python 3.11，正在安装..."
-            install_python
-        fi
-    }
-
-    # 安装 Python 3.11
-    function install_python() {
-        sudo apt update
-        sudo apt install -y software-properties-common
-        sudo add-apt-repository ppa:deadsnakes/ppa -y
-        sudo apt install -y python3.11 python3.11-venv python3.11-dev python3-pip
-        sudo apt install libopencv-dev python3-opencv
-        # 添加 pip 升级命令
-        python3.11 -m pip install --upgrade pip  # 升级 pip
-        echo "Python 3.11 和 pip 安装完成。"
-    }
-
-    # 检查 Python 版本
-    check_python_installed
-
-    # 更新包列表并安装 git 和 tmux
-    echo "正在更新软件包列表和安装 git 和 tmux..."
-    sudo apt update
-    sudo apt install -y git tmux python3.11-venv libgl1-mesa-glx libglib2.0-0 libsm6 libxext6 libxrender-dev
-
     echo "正在从 GitHub 克隆 grass 仓库..."
     git clone https://github.com/sdohuajia/grass-1.25.git grass
     if [ ! -d "grass" ]; then
@@ -184,6 +157,14 @@ function install_and_configure() {
     fi
 
     cd "grass" || { echo "无法进入 grass 目录"; exit 1; }
+
+    # 创建虚拟环境
+    echo "正在创建虚拟环境..."
+    python3.11 -m venv venv
+    echo "虚拟环境已创建。"
+
+    # 激活虚拟环境
+    source venv/bin/activate
 
     # 配置代理信息
     read -p "请输入您的代理信息，格式为 http://user:pass@ip:port: " proxy_info
@@ -201,18 +182,19 @@ function install_and_configure() {
     echo "$user_id" > "$uid_file"
     echo "userId 已添加到 $uid_file."
 
+    echo "正在安装依赖..."
+    pip install -r requirements.txt  # 安装依赖
+
     echo "正在使用 tmux 启动 main.py..."
     tmux new-session -d -s grass  # 创建新的 tmux 会话，名称为 grass
     tmux send-keys -t grass "cd grass" C-m  # 切换到 grass 目录
     tmux send-keys -t grass "source \"venv/bin/activate\"" C-m  # 激活虚拟环境
-    tmux send-keys -t grass "python3.11 -m pip install -r requirements.txt" C-m  # 安装依赖
     tmux send-keys -t grass "python3.11 main.py" C-m  # 启动 main.py
     echo "使用 'tmux attach -t grass' 命令来查看日志。"
     echo "要退出 tmux 会话，请按 Ctrl+B 然后按 D。"
 
     # 提示用户按任意键返回主菜单
     read -n 1 -s -r -p "按任意键返回主菜单..."
-
 }
 
 # 安装和配置 Teneo 函数
