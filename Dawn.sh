@@ -214,6 +214,7 @@ function setup_grassnode() {
 
     # 提示用户按任意键返回主菜单
     read -n 1 -s -r -p "按任意键返回主菜单..."
+}
 
 # 安装和配置 Teneo 函数
 function setup_Teneonode() {
