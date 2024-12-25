@@ -149,6 +149,7 @@ function setup_grassnode() {
     sudo apt install -y nodejs npm
     sudo apt-get install tmux
     sudo apt install node-cacache node-gyp node-mkdirp node-nopt node-tar node-which
+    sudo apt install -y python3.11 python3.11-venv python3.11-dev python3-pip
 
     # 检查 Node.js 版本
     node_version=$(node -v 2>/dev/null)
@@ -162,7 +163,7 @@ function setup_grassnode() {
     fi
 
     echo "正在从 GitHub 克隆 grass 仓库..."
-    git clone https://github.com/sdohuajia/grass-2.0.git grass
+    git clone https://github.com/sdohuajia/grass-1.25.git grass
     if [ ! -d "grass" ]; then
         echo "克隆失败，请检查网络连接或仓库地址。"
         exit 1
@@ -186,21 +187,33 @@ function setup_grassnode() {
     echo "$user_id" > "$uid_file"
     echo "userId 已添加到 $uid_file."
 
-    # 安装 npm 依赖
-    echo "正在安装 npm 依赖..."
-    npm install
+    # 创建新的 tmux 会话，名称为 grass
+    tmux new-session -d -s grass 
 
-    # 使用 tmux 自动运行 npm start
-    tmux new-session -d -s grass  # 创建新的 tmux 会话，名称为 grass
-    tmux send-keys -t teneo "cd grass" C-m  # 切换到 grass 目录
-    tmux send-keys -t grass "npm start" C-m # 启动 npm start
-    echo "npm 已在 tmux 会话中启动。"
+    # 在 tmux 会话中执行命令
+    tmux send-keys -t grass "echo '正在安装依赖...'" C-m
+    tmux send-keys -t grass "python3 -m venv venv" C-m  # 创建虚拟环境
+    tmux send-keys -t grass "if [ \$? -ne 0 ]; then echo '创建虚拟环境失败，请检查 Python 安装。'; exit 1; fi" C-m
+
+    tmux send-keys -t grass "source venv/bin/activate" C-m  # 激活虚拟环境
+    tmux send-keys -t grass "if [ \$? -ne 0 ]; then echo '激活虚拟环境失败。'; exit 1; fi" C-m
+
+    tmux send-keys -t grass "pip install -r requirements.txt" C-m  # 安装依赖
+    tmux send-keys -t grass "if [ \$? -ne 0 ]; then echo '安装依赖失败，请检查 requirements.txt 文件。'; exit 1; fi" C-m
+
+    tmux send-keys -t grass "echo '依赖安装完成！'" C-m
+
+    # 进入 grass 目录并运行 Python 脚本
+    tmux send-keys -t grass "cd grass" C-m  # 切换到 grass 目录
+    tmux send-keys -t grass "python3 main.py" C-m  # 启动 python3 main.py
+
+    # 提示用户
+    echo "Python 脚本已在 tmux 会话中启动。"
     echo "使用 'tmux attach -t grass' 命令来查看日志。"
     echo "要退出 tmux 会话，请按 Ctrl+B 然后按 D。"
 
     # 提示用户按任意键返回主菜单
     read -n 1 -s -r -p "按任意键返回主菜单..."
-}
 
 # 安装和配置 Teneo 函数
 function setup_Teneonode() {
