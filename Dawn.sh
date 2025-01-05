@@ -150,7 +150,7 @@ function setup_grassnode() {
     fi
     
     echo "正在从 GitHub 克隆 grass 仓库..."
-    git clone https://github.com/sdohuajia/grass-1.25.git grass
+    git clone https://github.com/Gzgod/Grass-new grass
     if [ ! -d "grass" ]; then
         echo "克隆失败，请检查网络连接或仓库地址。"
         exit 1
