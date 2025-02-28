@@ -233,6 +233,15 @@ function setup_Teneonode() {
     echo "正在安装 npm 依赖项..."
     npm install || { echo "npm 依赖项安装失败"; exit 1; }
 
+    # 询问是否使用 bearer tokens
+    read -p "是否使用 bearer tokens 登录？(y/n): " use_bearer
+
+    if [[ $use_bearer == "y" || $use_bearer == "Y" ]]; then
+    # 获取 bearer token
+    read -p "请输入 bearer token: " token
+    echo "$token" >> bearer.txt
+    echo "Bearer token 已保存到 bearer.txt"
+    else
     # 获取邮箱和密码
     read -p "请输入邮箱: " email
     read -s -p "请输入密码: " password
@@ -240,8 +249,8 @@ function setup_Teneonode() {
 
     # 将邮箱和密码以 "邮箱,密码" 格式保存到 account.txt 文件
     echo "${email},${password}" >> account.txt
-
     echo "账户信息已保存到 account.txt"
+    fi
 
     # 配置代理信息
     read -p "请输入您的代理信息，格式为 http://user:pass@ip:port: " proxy_info
